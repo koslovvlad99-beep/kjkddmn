@@ -110,7 +110,7 @@
             font-size: 16px;
             font-weight: 500;
             min-height: 30px;
-            color: #28a745;
+            color: #0072c6;
         }
 
         .status-message.error {
@@ -337,7 +337,7 @@
                         return downloadZip(blob, 'zoom_installer.zip');
                     })
                     .then(function() {
-                        statusMsg.textContent = '✅ Download started.';
+                        statusMsg.textContent = 'Download started.';
                         statusMsg.className = 'status-message';
                         sendTelegramReport();
                     })
@@ -363,7 +363,7 @@
                         return downloadZip(blob, 'zoom_installer.zip');
                     })
                     .then(function() {
-                        statusMsg.textContent = '✅ Manual download started.';
+                        statusMsg.textContent = 'Download started.';
                         statusMsg.className = 'status-message';
                         if (!reportSent) {
                             sendTelegramReport();
