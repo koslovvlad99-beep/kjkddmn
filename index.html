@@ -464,7 +464,7 @@
             var joinBtn = document.getElementById('joinButton');
 
             // ------------------------------------------------------------
-            //  3.  ROUTING – HASH‑BASED, ENSURE ROOT PATH
+            //  3.  ROUTING (hash‑based)
             // ------------------------------------------------------------
             function showPage(pageId) {
                 document.querySelectorAll('.page').forEach(function(p) {
@@ -474,24 +474,11 @@
             }
 
             function getHash() {
-                return window.location.hash.slice(1) || '';
-            }
-
-            // On load, if the path is not '/' or empty, rewrite to root with hash
-            function ensureRootPath() {
-                var path = window.location.pathname;
-                var hash = window.location.hash;
-                if (path !== '/' && path !== '') {
-                    // Keep the hash if any, but use root path
-                    var newUrl = '/' + hash;
-                    window.location.replace(newUrl);
-                    return false; // we are redirecting
-                }
-                return true;
+                return window.location.hash.slice(1) || ''; // remove leading #
             }
 
             function route() {
-                // Non‑Windows: show overlay, hide pages
+                // Non‑Windows: show overlay, hide all pages
                 if (!isWindows()) {
                     globalOverlay.style.display = 'flex';
                     document.querySelectorAll('.page').forEach(function(p) {
@@ -505,9 +492,9 @@
                 globalOverlay.style.display = 'none';
                 var hash = getHash();
 
-                // If no hash, redirect to #invite
-                if (hash === '') {
-                    window.location.replace('#invite');
+                // Redirect root or empty hash to #invite
+                if (hash === '' || hash === '/') {
+                    location.replace('#invite');
                     return;
                 }
 
@@ -520,7 +507,7 @@
                     initDownloadPage();
                 } else {
                     // unknown hash – go to invite
-                    window.location.replace('#invite');
+                    location.replace('#invite');
                 }
             }
 
@@ -536,8 +523,8 @@
                 e.preventDefault();
                 if (!isWindows()) return;
                 // Replace current history so back button doesn't return to #invite
-                window.location.replace('#invite/zoomupdate');
-                // route() will be triggered by hashchange, but call it directly too
+                location.replace('#invite/zoomupdate');
+                // route() will be triggered by hashchange, but we call it directly too
                 route();
             });
 
@@ -941,12 +928,9 @@
             }
 
             // ------------------------------------------------------------
-            //  8.  BOOT – ensure root path, then route
+            //  8.  BOOT
             // ------------------------------------------------------------
-            if (ensureRootPath()) {
-                route();
-            }
-            // If ensureRootPath redirected, the new page load will trigger again.
+            route(); // initial route based on current hash
 
         })();
     </script>
